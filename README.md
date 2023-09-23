@@ -1,6 +1,10 @@
 # Macropad
 CircuitPython for [Adafruit MacroPad RP2040](https://www.adafruit.com/product/5128)
- 
+
+## References
+- https://learn.adafruit.com/macropad-hotkeys/custom-configurations
+- https://learn.adafruit.com/adafruit-macropad-rp2040/macropad-keyboard-and-mouse
+
 ## To Do
 - [x] get the screen rotated 90 degrees
 - [ ] see if the macropad can pretend to be more than one HID
@@ -17,3 +21,4 @@ CircuitPython for [Adafruit MacroPad RP2040](https://www.adafruit.com/product/51
 - [ ] find the repo for the little ASCII python pet
     - [ ] see if we can render the cute faces to the OLED
 - [ ] attach second OLED (can those be chained with other STEMMA QT boards?)
+- [ ] split key functions and mapping from those to key names into a separate file
