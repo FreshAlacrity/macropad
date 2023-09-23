@@ -27,17 +27,15 @@ from adafruit_macropad import MacroPad
 # import time
 
 # @todo polish this up better
-from layers import list_layer_names
 from layers import get_action
 from mappings import do_key_action
-layer_names = list_layer_names()
+from mappings import current_layer_name
 
 # Initialize and rotate the MacroPad so that the OLED is on the left
 macropad = MacroPad(90)
 
 # Set initial values
 encoder_position = 0
-current_layer = 1
 encoder_mode = {
     "volume": ["vol_up", "vol_dn"],
     "layer": ["l_up", "l_dn"],
@@ -45,16 +43,14 @@ encoder_mode = {
 }
 encoder_mode_names = list(encoder_mode.keys())
 
-def get_layer():
-    print("LAYER:", layer_names[current_layer])
-    return layer_names[current_layer]
 
 def init():
     print("\n\n\n\nBooting\n")
     macropad.pixels[6] = (0, 10, 50)
     macropad.pixels[9] = (0, 10, 50)
     macropad.pixels[11] = (0, 10, 50)
-    get_layer()
+    do_key_action("Mouse")
+    print("LAYER:", current_layer_name())
     print("init complete")
 
 
@@ -64,24 +60,18 @@ while True:
     key_event = macropad.keys.events.get()
     if key_event:
         try:
-            # Wrap the layer number to make sure it's valid
-            if current_layer >= len(layer_names):
-                current_layer = 0
-            elif current_layer < 0:
-                current_layer = len(layer_names) - 1
-
-            layer_name = get_layer()
+            print("LAYER:", current_layer_name())
 
             if key_event.released:
                 key_num = key_event.key_number
-                action = get_action(key_num, layer_name)
+                action = get_action(key_num, current_layer_name())
                 print("KEY:", key_num, "up")
                 print("ACTION:", action)
                 do_key_action(action, 1)
 
             if key_event.pressed:
                 key_num = key_event.key_number
-                action = get_action(key_num, layer_name)
+                action = get_action(key_num, current_layer_name())
                 print("KEY:", key_num, "dn")
                 print("ACTION:", action)
                 do_key_action(action, 0)

@@ -6,8 +6,10 @@ from adafruit_hid.consumer_control import ConsumerControl
 from adafruit_hid.consumer_control_code import ConsumerControlCode
 from layers import list_layer_names
 
+layer_names = list_layer_names()
 mouse_speed = 5
 sleep_time = 1000
+current_layer = 1
 
 # Set up abbreviations for different devices
 kbd = Keyboard(usb_hid.devices)
@@ -19,33 +21,34 @@ m = Mouse(usb_hid.devices)
 def nothing():
     print("no action")
 
-"""
-# Examples
-def key_combination():
-    macropad.keyboard.press(macropad.Keycode.SHIFT, macropad.Keycode.B)
-    macropad.keyboard.release_all()
-"""
-
 
 # Layer Actions
+def current_layer_name():
+    return layer_names[current_layer]
+
+
+# @todo check that these work and wrap properly:
 def layer_up():
     global current_layer
-    current_layer = current_layer + 1
+    current_layer = len(layer_names) % (current_layer + 1)
 
 
 def layer_down():
     global current_layer
-    current_layer = current_layer - 1
+    current_layer = len(layer_names) % (current_layer - 1)
 
-def layer(layer_name, inputs, time=sleep_time, entering=True):
+
+def layer(layer_name, inputs=0, time=sleep_time, entering=True):
     # @todo implement N inputs to leave the layer
     # @todo implement sleep/time to exit layer by timeout
     # @todo implement exit layer to parent
     global current_layer
-    current_layer = list_layer_names().index(layer_name)
+    current_layer = layer_names.index(layer_name)
+
 
 # @todo add arrow key support
 key_actions = {
+    "Mouse": (layer, "Mouse"),
     "l_up": layer_up,
     "l_dn": layer_down,
     "blank": (print, "Key Unassigned"),
@@ -78,13 +81,17 @@ def add_standard_key_actions():
                 key_actions[key.lower()] = (kbd.send, keycode)
             else:
                 key_actions[key.lower()] = (kbd.send, keycode)
+
+
 add_standard_key_actions()
+
 
 def print_key_actions_list():
     # @todo sort by length = 0 and then alphabetically?
-    print("Key actions:\n",", ".join(key_actions.keys()))
+    print("Key actions:\n", ", ".join(key_actions.keys()))
 
-def do_key_action(action_name, index):
+
+def do_key_action(action_name, index=0):
     # Note: currently for index: 0 is press, 1 is release
     # macropad.play_tone(396, .2)
 
@@ -94,14 +101,12 @@ def do_key_action(action_name, index):
         raise Exception(
             "There is no action assigned to this name: '{}".format(action_name)
         )
-
     action = key_actions[action_name]
     if isinstance(key_actions[action_name], list):
         action = action[index]
     elif index == 1 and not isinstance(key_actions[action_name], list):
         # This key has only a press action, do nothing on release
         return
-
     if type(action) == type(do_key_action):
         #  print("Executing function")
         action()
@@ -113,9 +118,9 @@ def do_key_action(action_name, index):
             action[0](*arg)
         else:
             action[0](arg)
-
     else:
         print("Error - key input not a function")
+
 
 """
 all possible keycodes are listed here:
