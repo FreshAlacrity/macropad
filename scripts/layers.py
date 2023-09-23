@@ -1,19 +1,25 @@
 layout = {
     # Note: The first two entries are rotary encoder up/down
+    "Default": [
+        ["vol_dn"], ["vol_up"], ["Layer Select"],
+        ["vol_up"], [], [], [],
+        ["vol_dn"], [], [], [],
+        [], [], [], []
+    ],
     "Mouse": [
-        ["vol_dn"], ["vol_up"],
+        [], [], [],
         ["vol_up"], [], [], [],
         ["vol_dn"], [], [], [],
         [], [], [], []
     ],
     "Game": [
-        [], [],
+        [], [], [],
         [], [], [], [],
         [], [], ["move_up", "m_w"], ["inventory", "e"],
         [], ["move_left", "m_a"], ["move_down", "m_s"], ["move_right", "m_d"],
     ],
     "Cassette Beasts": [
-        [], [],
+        [], [], [],
         [], [], [], [],
         [], ["test", "T"], ["move_up", "m_w"], ["inventory", "i"],
         [], ["move_left", "m_a"], ["move_down", "m_s"], ["move_right", "m_d"],
@@ -33,8 +39,14 @@ layout = {
         ["page_up", "pg_up"],
         ["page_down", "pg_dn"],
     ],
+    "Layer Select": [
+        ["ls_dn"], ["ls_up"], ["ls_go"],
+        [], [], [], [],
+        [], [], [], [],
+        [], [], [], [],
+    ],
     "New": [
-        [], [],
+        [], [], [],
         [], [], [], [],
         [], [], [], [],
         [], [], [], [],
@@ -47,9 +59,12 @@ def list_layer_names():
 def has_action(layer_name, key_num):
     if not key_num < len(layout[layer_name]):
         raise Exception("This layer does not have a key number that high")
+
     return len(layout[layer_name][key_num]) > 0
 
 def get_action(key_num, layer_name):
+    # @later make this more sophisticated with a fallback to parent layers
+
     # Set default action
     action_name = "blank"
 

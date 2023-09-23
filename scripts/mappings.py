@@ -10,6 +10,7 @@ layer_names = list_layer_names()
 mouse_speed = 5
 sleep_time = 1000
 current_layer = 1
+selected_layer = current_layer
 
 # Set up abbreviations for different devices
 kbd = Keyboard(usb_hid.devices)
@@ -26,31 +27,40 @@ def current_layer_name():
 # @todo check that these work and wrap properly:
 def layer_up():
     global current_layer
-    current_layer = len(layer_names) % (current_layer + 1)
-
+    current_layer = (current_layer + 1) % len(layer_names)
+    layer(current_layer_name())
 
 def layer_down():
     global current_layer
-    current_layer = len(layer_names) % (current_layer - 1)
+    current_layer = (current_layer - 1) % len(layer_names)
+    layer(current_layer_name())
 
+def layer_select(move=0):
+    global selected_layer
+    if move == 0:
+        layer(layer_names[selected_layer])
+    else:
+        selected_layer = (selected_layer + move) % len(layer_names)
+        print("\n\nTap for\n{}\n".format(layer_names[selected_layer]))
 
 def layer(layer_name, inputs=0, time=sleep_time, entering=True):
     # @todo implement N inputs to leave the layer
     # @todo implement sleep/time to exit layer by timeout
     # @todo implement exit layer to parent
     global current_layer
+    global selected_layer
     current_layer = layer_names.index(layer_name)
-
+    selected_layer = current_layer
+    print("\nCurrent Layer:\n", current_layer_name())
 
 # @todo add arrow key support
 key_actions = {
     "blank": {"action": (print, "Key Unassigned"), "hint": "Unassigned key action"},
-    "Mouse": {
-        "action": (layer, "Mouse"),
-        "hint": "Switch to Mouse layer (@todo auto add all layer names as key actions)",
-    },
     "l_up": {"action": layer_up, "hint": "Go up one layer"},
     "l_dn": {"action": layer_down, "hint": "Go down one layer"},
+    "ls_up": {"action": (layer_select, 1), "hint": "Scroll up one layer"},
+    "ls_dn": {"action": (layer_select, -1), "hint": "Scroll down one layer"},
+    "ls_go": {"action": layer_select, "hint": "Move to the selected layer"},
     "vol_up": {
         "action": (cc.send, ConsumerControlCode.VOLUME_INCREMENT),
         "hint": "Turn up the sound volume",
@@ -121,6 +131,20 @@ def add_standard_key_actions():
 
 add_standard_key_actions()
 
+def add_layer_switch_actions():
+    for name in layer_names:
+        # @todo check that there's not an action collision
+        if name in key_actions:
+            raise Exception(
+                "Layer name collision:\n{} is already a key action".format(name)
+            )
+        else:
+            key_actions[name] = {
+                    "action": (layer, name),
+                    "hint": "Switch to {} layer".format(name),
+                }
+
+add_layer_switch_actions()
 
 def print_key_actions_list():
     # @todo sort by length = 0 and then alphabetically?
@@ -145,29 +169,26 @@ def do_key_action(action_name, index=0):
     action = key_actions[action_name]["action"]
     print(key_actions[action_name]["hint"])
     if isinstance(key_actions[action_name], list):
-        print("Press or release?")
+        # print("Press or release?")
         # If this key has a press and release action, get the correct one
         action = action[index]
     elif index == 1 and not isinstance(key_actions[action_name], list):
-        print("Released with no release action")
-        # This key has only a press action, do nothing on release
+        # print("Released with no release action")
         return
 
-    print("@debug here")
-
     if type(action) == type(do_key_action):
-        print("Executing basic function")
+        # print("Executing basic function")
         action()
     elif len(action) > 1:
         arg = action[1]
         if isinstance(arg, dict):
-            print("Executing function with named arguments")
+            # print("Executing function with named arguments")
             action[0](**arg)
         if isinstance(arg, tuple):
-            print("Executing function with tuple arguments")
+            # print("Executing function with tuple arguments")
             action[0](*arg)
         else:
-            print("Executing function with other/string arguments")
+            # print("Executing function with other/string arguments")
             action[0](arg)
     else:
         print("Error - key input not a function")

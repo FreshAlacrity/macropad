@@ -29,18 +29,23 @@ encoder_mode_names = list(encoder_mode.keys())
 
 def input_action(key_num, index=0):
     indexTranlation = ["down", "up"]
+    # issue here: layer change doesn't seem to be sticking
     action = get_action(key_num, current_layer_name())
-    print("KEY:", key_num, indexTranlation[index])
+    print("LAYER:", current_layer_name())
+    # print("KEY:", key_num, indexTranlation[index])
     print("ACTION:", action)
     do_key_action(action, index)
     # @todo log the action somehow
 
 def init():
     print("\n\n\n\nBooting\n")
+
+    # @todo light up the keypad corresponding to the *selected_layer*
     macropad.pixels[6] = (0, 10, 50)
     macropad.pixels[9] = (0, 10, 50)
     macropad.pixels[11] = (0, 10, 50)
-    do_key_action("Mouse")
+
+    do_key_action("Default")
     print("LAYER:", current_layer_name())
     print("init complete")
 
@@ -55,7 +60,7 @@ while True:
             print("LAYER:", current_layer_name())
 
             # Add two to the key number to skip the rotary encoder inputs
-            key_num = key_event.key_number + 2
+            key_num = key_event.key_number + 3
 
             if key_event.released:
                 input_action(key_num, 1)
@@ -71,7 +76,7 @@ while True:
     current_position = macropad.encoder
 
     if macropad.encoder_switch_debounced.pressed:
-        macropad.consumer_control.send(macropad.ConsumerControlCode.VOLUME_INCREMENT)
+        input_action(2, 0)
 
     # Clockwise turn detected
     if macropad.encoder > encoder_position:
