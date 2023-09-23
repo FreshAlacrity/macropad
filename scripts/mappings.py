@@ -38,21 +38,40 @@ def layer_down():
 
 # @todo add arrow key support
 key_actions = {
+    "l_up": layer_up,
+    "l_dn": layer_down,
+    "blank": (print, "Key Unassigned"),
+    "vol_up": (cc.send, ConsumerControlCode.VOLUME_INCREMENT),
+    "vol_dn": (cc.send, ConsumerControlCode.VOLUME_DECREMENT),
+    "rt_click": (m.click, Mouse.RIGHT_BUTTON),
+    "lf_click": (m.click, Mouse.LEFT_BUTTON),
+    "md_click": (m.click, Mouse.MIDDLE_BUTTON),
+    "m_drag": (m.press, Mouse.LEFT_BUTTON),
+    "m_stop": (m.release, Mouse.LEFT_BUTTON),
+    "m_up": (m.move, {"y": -mouse_speed}),
+    "m_rt": (m.move, {"x": +mouse_speed}),
+    "m_lf": (m.move, {"x": -mouse_speed}),
+    "m_dn": (m.move, {"y": +mouse_speed}),
     "m_w": [(kbd.press, Keycode.W), (kbd.release, Keycode.W)],
     "m_a": [(kbd.press, Keycode.A), (kbd.release, Keycode.A)],
     "m_s": [(kbd.press, Keycode.S), (kbd.release, Keycode.S)],
     "m_d": [(kbd.press, Keycode.D), (kbd.release, Keycode.D)],
-    "blank": (print, "Key Unassigned"),
-    "vol_up": (cc.send, ConsumerControlCode.VOLUME_INCREMENT),
-    "vol_dn": (cc.send, ConsumerControlCode.VOLUME_DECREMENT),
-    "r_click": (m.click, Mouse.RIGHT_BUTTON),
-    "m_up": (m.move, {"y": -mouse_speed}),
-    "m_rt": (m.move, {"x": +mouse_speed}),
-    "m_lg": (m.move, {"x": -mouse_speed}),
-    "m_dn": (m.move, {"y": +mouse_speed}),
-    "l_up": layer_up,
-    "l_dn": layer_down,
 }
+
+
+def add_standard_key_actions():
+    all_codes = dir(Keycode)
+    for key in all_codes:
+        if key[0] != "_":
+            keycode = getattr(Keycode, key)
+            # Handle basic letter inputs
+            if len(key) == 1 and key.isalpha():
+                key_actions[key.upper()] = (kbd.send, (Keycode.SHIFT, keycode))
+                key_actions[key.lower()] = (kbd.send, keycode)
+            else:
+                key_actions[key.lower()] = (kbd.send, keycode)
+add_standard_key_actions()
+
 
 def do_key_action(action_name, index):
     # Note: currently for index: 0 is press, 1 is release
@@ -60,15 +79,6 @@ def do_key_action(action_name, index):
 
     if not isinstance(action_name, str):
         raise Exception("This action name is not a string!")
-    if len(action_name) == 1 and action_name.isalpha():
-        # Handle basic letter input
-        key_name = getattr(Keycode, action_name.upper())
-        if index == 0:
-            if action_name.islower():
-                kbd.send(key_name)
-            else:
-                kbd.send(Keycode.SHIFT, key_name)
-        return
     elif action_name not in key_actions:
         raise Exception(
             "There is no action assigned to this name: '{}".format(action_name)
@@ -88,6 +98,8 @@ def do_key_action(action_name, index):
         arg = action[1]
         if isinstance(arg, dict):
             action[0](**arg)
+        if isinstance(arg, tuple):
+            action[0](*arg)
         else:
             action[0](arg)
 
@@ -95,35 +107,20 @@ def do_key_action(action_name, index):
         print("Error - key input not a function")
 
 """
+all possible keycodes are listed here:
+    https://usb.org/sites/default/files/hut1_21_0.pdf#page=83
+keycodes are the names for key *positions* on a US keyboard
 
-
+# As yet unsupported actions:
 
 # Pause or resume playback.
 cc.send(ConsumerControlCode.PLAY_PAUSE)
-
-
-# Click the left mouse button.
-m.click(Mouse.LEFT_BUTTON)
 
 # Move the mouse diagonally to the upper left.
 m.move(-100, -100, 0)
 
 # Roll the mouse wheel away from the user one unit.
-# Amount scrolled depends on the host.
-m.move(0, 0, -1)
-
-# Keyword arguments may also be used. Omitted arguments default to 0.
-m.move(x=-100, y=-100)
 m.move(wheel=-1)
-
-# Move the mouse while holding down the left button. (click-drag).
-m.press(Mouse.LEFT_BUTTON)
-m.move(x=50, y=20)
-m.release_all()       # or m.release(Mouse.LEFT_BUTTON)
-
-
-# Type capital 'A'.
-kbd.send(Keycode.SHIFT, Keycode.A)
 
 # Type control-x.
 kbd.send(Keycode.CONTROL, Keycode.X)
@@ -161,32 +158,6 @@ allKeys = {
       'BRIGHTNESS_INCREMENT'
     ],
     "Keycode": [
-        'C',
-        'M',
-        'A',
-        'B',
-        'D',
-        'E',
-        'F',
-        'G',
-        'H',
-        'I',
-        'J',
-        'K',
-        'L',
-        'N',
-        'O',
-        'P',
-        'Q',
-        'R',
-        'S',
-        'T',
-        'U',
-        'V',
-        'W',
-        'X',
-        'Y',
-        'Z',
         'ONE',
         'TWO',
         'THREE',

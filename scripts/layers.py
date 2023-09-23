@@ -7,7 +7,7 @@ layout = {
         ],
         "Cassette Beasts": [
                 [], [], [], [],
-                [], [], ["move_up", "m_w"], ["inventory", "i"],
+                [], ["test","T"], ["move_up", "m_w"], ["inventory", "i"],
                 [], ["move_left", "m_a"], ["move_down", "m_s"], ["move_right", "m_d"],
                 ["close", "tab", "esc"],
                 ["jump", "space"],
