@@ -4,21 +4,25 @@ CircuitPython for [Adafruit MacroPad RP2040](https://www.adafruit.com/product/51
 ## References
 - https://learn.adafruit.com/macropad-hotkeys/custom-configurations
 - https://learn.adafruit.com/adafruit-macropad-rp2040/macropad-keyboard-and-mouse
+- https://docs.circuitpython.org/projects/macropad/en/latest/api.html
+- https://docs.circuitpython.org/projects/hid/en/latest/
 
 ## To Do
 - [x] get the screen rotated 90 degrees
 - [ ] keep breaking out different aspects of the code into different files
+    - [x] file for layer mappings
+        - [ ] individual files for layer mappings (with parents listed)
+    - [x] file for key actions
 - [ ] see if the macropad can pretend to be more than one HID
-- [ ] click rotary to change between modes
-    ex volume control and layer select
-- [ ] add a layer system with layer select via rotary knob
-    - [ ] implement improved mousekeys as a layer
+- [ ] click rotary to change between rotary input modes
+    - [ ] layer select mode
+    - [ ] volume control mode
+- [ ] implement improved mousekeys as a layer
 - [ ] work on incorporating a pomodoro timer using the time lib
     - [ ] show timer progress on the OLED
 - [ ] count keypresses
 - [ ] add key action for changing the audio in/out
     with the FxSound key combinations
-- [ ] use an array of keynames to map to key numbers
 - [ ] find the repo for the little ASCII python pet
     - [ ] see if we can render the cute faces to the OLED
 - [ ] attach second OLED (can those be chained with other STEMMA QT boards?)
