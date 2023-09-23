@@ -1,4 +1,4 @@
-# Version 0.1
+# Version 0.2
 
 # CTRL + C > any key to enter REPL, CTRL + D to exit
 """
@@ -19,18 +19,23 @@
 [ ] attach a second OLED (chained with other STEMMA QT boards?)
 
 Based on: MacroPad HID keyboard and mouse demo,
-    Unlicense 2021 by Kattni Rembor for Adafruit Industries
+    Unlicense 2021 by Kattni Rembor for Adafruit Induencoder_positiones
 """
 
 from adafruit_macropad import MacroPad
 
 # import time
 
+# @todo polish this up better
+from layers import list_layer_names
+from layers import get_action
+layer_names = list_layer_names()
+
 # Initialize and rotate the MacroPad so that the OLED is on the left
 macropad = MacroPad(90)
 
 # Set initial values
-last_position = 0  #  for the rotary encoder
+encoder_position = 0
 current_layer = 1
 mouse_speed = 5
 encoder_mode = {
@@ -39,33 +44,6 @@ encoder_mode = {
     "mouse": ["m_up", "m_dn"],
 }
 encoder_mode_names = list(encoder_mode.keys())
-
-layers = {
-    "Mouse": ["vol_up", "vol_dn"],
-    "Cassette Beasts": [
-        ["move_up", "w"],
-        ["move_down", "s"],
-        ["move_right", "d"],
-        ["move_left", "a"],
-        ["close", "tab", "esc"],
-        ["jump", "space"],
-        ["sprint", "shift"],
-        ["climb", "ctrl"],
-        ["map", "m"],
-        ["party", "p"],
-        ["inventory", "i"],
-        ["confirm", "space", "e", "enter"],
-        ["menu", "tab", "enter", "esc"],
-        ["ui_1", "r"],
-        ["magn", "r"],
-        ["ui_2", "f"],
-        ["sprint", "tab"],
-        ["continue", "e"],
-        ["page_up", "pg_up"],
-        ["page_down", "pg_dn"],
-    ],
-}
-layer_names = list(layers.keys())
 
 
 def nothing():
@@ -93,11 +71,11 @@ def mouse_r_click():
 
 
 def mouse_up():
-    macropad.mouse.move(y=+mouse_speed)
+    macropad.mouse.move(y=-mouse_speed)
 
 
 def mouse_down():
-    macropad.mouse.move(y=-mouse_speed)
+    macropad.mouse.move(y=+mouse_speed)
 
 
 def mouse_left():
@@ -121,18 +99,42 @@ def layer_down():
 
 # @todo add arrow key support
 key_actions = {
-    "blank": nothing,
-    "vol_up": increase_volume,
-    "vol_dn": decrease_volume,
-    "r_click": mouse_r_click,
-    "m_up": mouse_up,
-    "m_right": mouse_right,
-    "m_left": mouse_left,
-    "m_dn": mouse_down,
-    "l_up": layer_up,
-    "l_dn": layer_down,
+    "blank": (print, "unassigned"),
+    "vol_up": (increase_volume),
+    "vol_dn": (decrease_volume),
+    "r_click": (mouse_r_click),
+    "m_up": (macropad.mouse.move, {"y": -mouse_speed}),
+    "m_right": (mouse_right),
+    "m_left": (mouse_left),
+    "m_dn": (mouse_down),
+    "l_up": (layer_up),
+    "l_dn": (layer_down),
 }
 
+def do_key_action(action_name):
+    print("Key action:", action_name)
+    if not isinstance(action_name, str):
+        action_name = "error"
+        # @todo learn to handle errors properly
+        print("Action name is not a string!")
+    if action_name in key_actions:
+        action = key_actions[action_name]
+    else:
+        action = (print, action_name)
+
+    if type(action) == type(init):
+        #  print("Executing function")
+        action()
+    elif len(action) > 1:
+        arg = action[1]
+        if isinstance(arg, str):
+            #  print("Executing function w/encoder_position argument")
+            action[0](arg)
+        else:
+            #  print("Executing function w/named arguments")
+            action[0](**arg)
+    else:
+        print("Error - key input not a function")
 
 def init():
     print("\n\n\n\nBooting\n")
@@ -146,38 +148,36 @@ while True:
 
     if key_event:
         if key_event.pressed:
-            # Wrap the layer number to make sure it's valid
 
+            # Wrap the layer number to make sure it's valid
             if current_layer >= len(layer_names):
                 current_layer = 0
             elif current_layer < 0:
                 current_layer = len(layer_names) - 1
 
-            k = key_event.key_number
+            key_num = key_event.key_number
             layer_name = layer_names[current_layer]
-            layout = layers[layer_name]
+            action = get_action(key_num, layer_name)
 
-            action = "blank"
-            if k <= len(layout):
-                print(type(layout[k]))
-                if type(layout[k]) == str:
-                    action = layout[k]
-                else:
-                    action = layout[k][1]
             print("LAYER:", layer_name)
-            print("KEY:", k)
+            print("KEY:", key_num)
             print("ACTION:", action)
 
+            do_key_action(action)
+
+    # Check for rotary encoder input
     macropad.encoder_switch_debounced.update()
+    current_position = macropad.encoder
 
     if macropad.encoder_switch_debounced.pressed:
         macropad.consumer_control.send(macropad.ConsumerControlCode.VOLUME_INCREMENT)
-    current_position = macropad.encoder
 
-    if macropad.encoder > last_position:
-        key_actions["m_up"]()
-        last_position = current_position
+    # Clockwise turn detected
+    if macropad.encoder > encoder_position:
+        do_key_action("m_up")
+        encoder_position = current_position
 
-    if macropad.encoder < last_position:
-        key_actions["m_dn"]()
-        last_position = current_position
+    # Counterclockwise turn detected
+    elif macropad.encoder < encoder_position:
+        do_key_action("m_dn")
+        encoder_position = current_position
