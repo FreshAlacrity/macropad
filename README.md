@@ -7,6 +7,7 @@ CircuitPython for [Adafruit MacroPad RP2040](https://www.adafruit.com/product/51
 
 ## To Do
 - [x] get the screen rotated 90 degrees
+- [ ] keep breaking out different aspects of the code into different files
 - [ ] see if the macropad can pretend to be more than one HID
 - [ ] click rotary to change between modes
     ex volume control and layer select
