@@ -4,8 +4,10 @@ from adafruit_hid.keycode import Keycode
 from adafruit_hid.mouse import Mouse
 from adafruit_hid.consumer_control import ConsumerControl
 from adafruit_hid.consumer_control_code import ConsumerControlCode
+from layers import list_layer_names
 
 mouse_speed = 5
+sleep_time = 1000
 
 # Set up abbreviations for different devices
 kbd = Keyboard(usb_hid.devices)
@@ -35,6 +37,12 @@ def layer_down():
     global current_layer
     current_layer = current_layer - 1
 
+def layer(layer_name, inputs, time=sleep_time, entering=True):
+    # @todo implement N inputs to leave the layer
+    # @todo implement sleep/time to exit layer by timeout
+    # @todo implement exit layer to parent
+    global current_layer
+    current_layer = list_layer_names().index(layer_name)
 
 # @todo add arrow key support
 key_actions = {
@@ -72,6 +80,9 @@ def add_standard_key_actions():
                 key_actions[key.lower()] = (kbd.send, keycode)
 add_standard_key_actions()
 
+def print_key_actions_list():
+    # @todo sort by length = 0 and then alphabetically?
+    print("Key actions:\n",", ".join(key_actions.keys()))
 
 def do_key_action(action_name, index):
     # Note: currently for index: 0 is press, 1 is release
