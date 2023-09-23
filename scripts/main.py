@@ -4,12 +4,15 @@
 """
     = To Do =
 [x] get the screen rotated 90 degrees
+[ ] see if the macropad can pretend to be more than one HID
 [ ] click rotary to change between volume control and layer select
 [ ] implement improved mousekeys
 [ ] add a layer system with layer select via rotary knob
 [ ] work on incorporating a pomodoro timer using the time lib
     [ ] show timer progress on the OLED
 [ ] count keypresses
+[ ] add key action for changing the audio in/out
+    with the FxSound key combinations
 [ ] use an array of keynames to map to key numbers
 [ ] find the repo for the little ASCII python pet
     [ ] see if we can render the cute faces to the OLED
@@ -27,13 +30,16 @@ from adafruit_macropad import MacroPad
 macropad = MacroPad(90)
 
 # Set initial values
-last_position = 0
-current_layer = 0
+last_position = 0  #  for the rotary encoder
+current_layer = 1
 mouse_speed = 5
 encoder_mode = {
     "volume": ["vol_up", "vol_dn"],
-    "layer": ["layer_up", "layer_down"]
+    "layer": ["l_up", "l_dn"],
+    "mouse": ["m_up", "m_dn"],
 }
+encoder_mode_names = list(encoder_mode.keys())
+
 layers = {
     "Mouse": ["vol_up", "vol_dn"],
     "Cassette Beasts": [
@@ -104,10 +110,14 @@ def mouse_right():
 
 # Layer Actions
 def layer_up():
-    current_layer += 1
+    global current_layer
+    current_layer = current_layer + 1
+
 
 def layer_down():
-    current_layer -= 1
+    global current_layer
+    current_layer = current_layer - 1
+
 
 # @todo add arrow key support
 key_actions = {
@@ -118,11 +128,14 @@ key_actions = {
     "m_up": mouse_up,
     "m_right": mouse_right,
     "m_left": mouse_left,
-    "m_down": mouse_down,
+    "m_dn": mouse_down,
+    "l_up": layer_up,
+    "l_dn": layer_down,
 }
 
 
 def init():
+    print("\n\n\n\nBooting\n")
     print("init complete")
 
 
@@ -134,6 +147,7 @@ while True:
     if key_event:
         if key_event.pressed:
             # Wrap the layer number to make sure it's valid
+
             if current_layer >= len(layer_names):
                 current_layer = 0
             elif current_layer < 0:
@@ -157,16 +171,13 @@ while True:
     macropad.encoder_switch_debounced.update()
 
     if macropad.encoder_switch_debounced.pressed:
-
         macropad.consumer_control.send(macropad.ConsumerControlCode.VOLUME_INCREMENT)
-
     current_position = macropad.encoder
 
     if macropad.encoder > last_position:
-        key_actions["vol_up"]()
+        key_actions["m_up"]()
         last_position = current_position
 
     if macropad.encoder < last_position:
-        key_actions["vol_dn"]()
-        # macropad.mouse.move(x=-5)
+        key_actions["m_dn"]()
         last_position = current_position
