@@ -4,6 +4,7 @@ CircuitPython for [Adafruit MacroPad RP2040](https://www.adafruit.com/product/51
 ## References
 - https://learn.adafruit.com/macropad-hotkeys/custom-configurations
 - https://learn.adafruit.com/adafruit-macropad-rp2040/macropad-keyboard-and-mouse
+- https://docs.circuitpython.org/projects/macropad/en/latest/api.html
 
 ## To Do
 - [x] get the screen rotated 90 degrees
