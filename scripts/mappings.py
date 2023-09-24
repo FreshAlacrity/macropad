@@ -7,7 +7,8 @@ from adafruit_hid.consumer_control_code import ConsumerControlCode
 from layers import list_layer_names
 
 layer_names = list_layer_names()
-mouse_speed = 5
+mouse_speed = 10
+mouse_scoot = 2
 sleep_time = 1000
 current_layer = 1
 selected_layer = current_layer
@@ -20,7 +21,6 @@ cc = ConsumerControl(usb_hid.devices)
 # alternatively: macropad.consumer_control.send
 mouse_delta = {"x": 0, "y": 0}
 
-# @todo mouse_angular_move(theta) that calls mouse_move(cos(theta), sin(theta))
 
 def mouse_move(x, y):
     global mouse_delta
@@ -35,7 +35,7 @@ def close_out():
     if mouse_delta["x"] != 0 or mouse_delta["y"] != 0:
         m.move(x=mouse_delta["x"], y=mouse_delta["y"])
         mouse_delta = {"x": 0, "y": 0}
-        print("\n------------\n")
+    print("\n------------\n")
 
 
 # Layer Actions
@@ -113,23 +113,35 @@ key_actions = {
         "hint": "Toggle off mouse drag (release left button)",
     },
     "m_rt": {
-        "action": [0, 0, (mouse_move, (1, 0))],
+        "action": [
+            (mouse_move, (mouse_scoot, 0)),
+            0,
+            (mouse_move, (1, 0))
+        ],
         "hint": "Move the mouse right",
     },
-    "m_ur": {
-        "action": [0, 0, (mouse_move, (1, -1))],
-        "hint": "Move the mouse up and right",
-    },
     "m_lf": {
-        "action": [0, 0, (mouse_move, (-1, 0))],
+        "action": [
+            (mouse_move, (-mouse_scoot, 0)),
+            0,
+            (mouse_move, (-1, 0))
+        ],
         "hint": "Move the mouse left",
     },
     "m_up": {
-        "action": [0, 0, (mouse_move, (0, -1))],
+        "action": [
+            (mouse_move, (0, -mouse_scoot)),
+            0,
+            (mouse_move, (0, -1))
+        ],
         "hint": "Move the mouse up",
     },
     "m_dn": {
-        "action": [0, 0, (mouse_move, (0, 1))],
+        "action": [
+            (mouse_move, (0, mouse_scoot)),
+            0,
+            (mouse_move, (0, 1))
+        ],
         "hint": "Move the mouse down",
     },
     "m_w": {
@@ -222,7 +234,7 @@ def do_key_action(action_name, index=0):
     # Note: currently for index 0 is press, 1 is release, 2 is hold
     # macropad.play_tone(396, .2)
     indexes = ["press", "release", "hold"]
-    print("Action received:", action_name, indexes[index])
+    # print("Action received: '{}' type {}".format(action_name, indexes[index]))
 
     if not valid_action(action_name):
         return

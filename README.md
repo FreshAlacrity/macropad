@@ -11,7 +11,11 @@ CircuitPython for [Adafruit MacroPad RP2040](https://www.adafruit.com/product/51
 ## To Do
 - [x] get the screen rotated 90 degrees
 - [x] add a way to include descriptions of key actions
-- [ ] make a global value to track mouse movement
+- [x] make a global value to track mouse movement
+    - [ ] add a specialized gaming-mouse layer where it accelerates over a bit of time and then decelerates over a bit of time for viewer comfort
+        - [ ] add a per-layer mouse speed modifier
+        - [ ] try damped harmonic oscillator mouse movement where it gently eases back a bit after the key is released
+    - [ ] mouse_angular_move(theta) that calls mouse_move(cos(theta), sin(theta))
 - [ ] key + rotary actions
     - [ ] undo/redo
     - [ ] cut/copy/paste/select-all
@@ -50,7 +54,8 @@ CircuitPython for [Adafruit MacroPad RP2040](https://www.adafruit.com/product/51
           - [ ] flag for expected # of inputs
           - [ ] flag for elapsed time
           - [x] add a default time-until-rollback-to-sleep/default
-          - [ ] roll back when either elapses
+              - [ ] have the first keypress back from sleep do nothing
+          - [ ] roll back to previous layer when either elapses
     - [ ] hold actions: use auto-layers to implement Leader keys
 - [ ] work on incorporating a pomodoro timer using the time lib
     - [ ] show timer progress on the OLED

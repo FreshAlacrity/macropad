@@ -17,6 +17,8 @@ macropad = MacroPad(90)
 
 # Set initial values
 encoder_position = 0
+idle_time = 0
+sleep_at = 10000
 keys_held = []
 
 
@@ -30,25 +32,34 @@ def input_action(key_num, index=0):
     do_key_action(action, index)
     # @todo log the action somehow
 
+def sleep():
+    print("\n\n\n\n\n\n...zZzzZZ\n")
+    macropad.pixels[6] = (0, 0, 0)
+    macropad.pixels[9] = (0, 0, 0)
+    macropad.pixels[11] = (0, 0, 0)
 
-def init():
-    print("\n\n\n\nBooting\n")
-
+def unsleep():
     # @todo light up the keypad corresponding to the *selected_layer*
+    global idle_time
+    idle_time = 0
     macropad.pixels[6] = (0, 10, 50)
     macropad.pixels[9] = (0, 10, 50)
     macropad.pixels[11] = (0, 10, 50)
 
+def init():
+    print("\n\n\n\n\nBooting...\n")
     do_key_action("Mouse")
+    unsleep()
     # print("LAYER:", current_layer_name())
-    # print("init complete")
 
 
 # Main Loop
 init()
 while True:
+    idle_time += 1
     try:
         while macropad.keys.events:
+            unsleep()
             key_event = macropad.keys.events.get()
             if key_event:
                 # @todo can this get more than one event per loop?
@@ -69,8 +80,14 @@ while True:
         # else:
         #    print(keys_held)
 
-        for key in keys_held:
-            input_action(key, 2)
+        if len(keys_held) == 0:
+            if idle_time == sleep_at:
+                sleep()
+
+        else:
+            unsleep()
+            for key in keys_held:
+                input_action(key, 2)
 
         # Check for rotary encoder input
         macropad.encoder_switch_debounced.update()
@@ -89,8 +106,9 @@ while True:
 
         encoder_position = current_position
 
-        # Implement registered mouse movements etc
-        close_out()
+        # Close out any pending actions (mouse movement etc)
+        if idle_time == 0:
+            close_out()
     except Exception as err:
         print("Error: {}, {}".format(err, type(err)))
         raise
