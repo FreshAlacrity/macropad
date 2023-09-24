@@ -11,6 +11,7 @@ mouse_speed = 5
 sleep_time = 1000
 current_layer = 1
 selected_layer = current_layer
+hold_duration = {}
 
 # Set up abbreviations for different devices
 kbd = Keyboard(usb_hid.devices)
@@ -18,11 +19,17 @@ m = Mouse(usb_hid.devices)
 cc = ConsumerControl(usb_hid.devices)
 # alternatively: macropad.consumer_control.send
 
+def mouse_move(dir):
+    speed = mouse_speed
+    axis = dir % 2
+    sign = 1 + int(dir >= 2) * -2
+    x = speed * sign * axis
+    y = speed * sign * (axis ^ 1)
+    m.move(x=x, y=y)
 
 # Layer Actions
 def current_layer_name():
     return layer_names[current_layer]
-
 
 # @todo check that these work and wrap properly:
 def layer_up():
@@ -89,10 +96,18 @@ key_actions = {
         "action": (m.release, Mouse.LEFT_BUTTON),
         "hint": "Toggle off mouse drag (release left button)",
     },
-    "m_rt": {"action": (m.move, {"x": +mouse_speed}), "hint": "Move the mouse right"},
-    "m_lf": {"action": (m.move, {"x": -mouse_speed}), "hint": "Move the mouse left"},
-    "m_up": {"action": (m.move, {"y": +mouse_speed}), "hint": "Move the mouse up"},
-    "m_dn": {"action": (m.move, {"y": -mouse_speed}), "hint": "Move the mouse down"},
+    "m_rt": {
+        "action": [(mouse_move, 1), 0, (mouse_move, 1)],
+        "hint": "Move the mouse right"},
+    "m_lf": {
+        "action": [(mouse_move, 3), 0, (mouse_move, 3)],
+        "hint": "Move the mouse left"},
+    "m_up": {
+        "action": [(mouse_move, 2), 0, (mouse_move, 2)],
+        "hint": "Move the mouse up"},
+    "m_dn": {
+        "action": [(mouse_move, 0), 0, (mouse_move, 0)],
+        "hint": "Move the mouse down"},
     "m_w": {
         "action": [(kbd.press, Keycode.W), (kbd.release, Keycode.W)],
         "hint": "Gamepad style W",
@@ -151,30 +166,59 @@ def print_key_actions_list():
     print("Key actions:\n", ", ".join(key_actions.keys()))
 
 
-def do_key_action(action_name, index=0):
-    # Note: currently for index: 0 is press, 1 is release
-    # macropad.play_tone(396, .2)
-
+def valid_action(action_name):
     if not isinstance(action_name, str):
-        raise Exception("This action name is not a string!")
+        raise Exception(
+            "This action name is not a string: '{}'".format(action_name)
+        )
     elif action_name not in key_actions:
         raise Exception(
-            "There is no action assigned to this name: '{}".format(action_name)
+            "There is no action assigned to this name: '{}'".format(action_name)
         )
     elif "action" not in key_actions[action_name]:
         raise Exception(
-            "There is no function assigned for this key action: '{}".format(action_name)
+            "There is no function assigned to action '{}'".format(action_name)
         )
+    return True
 
-    action = key_actions[action_name]["action"]
-    print(key_actions[action_name]["hint"])
-    if isinstance(key_actions[action_name], list):
-        # print("Press or release?")
-        # If this key has a press and release action, get the correct one
-        action = action[index]
-    elif index == 1 and not isinstance(key_actions[action_name], list):
-        # print("Released with no release action")
+def valid_index(action, index):
+    if index >= len(action):
+        # print("Index outside of list of specified actions")
+        return False
+    elif action[index] == 0:
+        # print("No action specified for this index")
+        return False
+    else:
+        return True
+
+def do_key_action(action_name, index=0):
+    # Note: currently for index 0 is press, 1 is release, 2 is hold
+    # macropad.play_tone(396, .2)
+
+    if not valid_action(action_name):
         return
+    else:
+        action = key_actions[action_name]["action"]
+        # print(key_actions[action_name]["hint"])
+
+    # Handle case: only press action specified
+    if not isinstance(action, list):
+        action = [action]
+
+    if valid_index(action, index):
+        action = action[index]
+    else:
+        return
+
+    """
+    # Currently erroring badly, @todo figure out why
+    # Track duration of key hold (for things like acceleration)
+    global hold_duration
+    if index == 1:
+        hold_duration[action_name] = 0
+    elif index == 2:
+        hold_duration[action_name] = hold_duration[action_name] + 1
+    """
 
     if type(action) == type(do_key_action):
         # print("Executing basic function")

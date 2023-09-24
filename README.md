@@ -18,21 +18,29 @@ CircuitPython for [Adafruit MacroPad RP2040](https://www.adafruit.com/product/51
         - [ ] save: "CTRL + S"
         - [ ] command palette for VSCode: "CTRL + SHIFT + P"
     - [x] increase and decrease volume
+    - [x] scroll through available layers
     - [ ] increase and decrease brightness
     - [ ] scrollwheel action
     - [ ] increase and decrease cursor speed
-    - [ ] alias numbers?  1 => "one"
-- [ ] click rotary to change between rotary input modes
-    - [ ] have default rotary mode per-layer
-    - [ ] first click: enter layer select mode
-    - [ ] default: volume control mode
-- [ ] implement improved mousekeys as a layer
-    - [ ] r. encoder mode for increasing & decreasing the mouse cursor speed
+    - [ ] alias numbers, i.e.  1 or "1" to "one"
+- [ ] layers
+    - [ ] individual files for layer mappings
+        - [ ] list parent layer
+            - [ ] use this to sort layer list (children come after their parents)
+        - [ ] define a color scheme and pattern for the layer
+    - [ ] fallthrough to lower layers for key actions when those aren't assigned
+    - [ ] lighting
+        - [ ] custom lighting color and pattern for each layer
+        - [ ] Layer Select layer shows those colors on the appropriate hotkeys
+    - [ ] implement improved mousekeys as a layer
+        - [ ] have a function that runs while it's being held?
+            - [ ] hold functions increment a counter
+- [x] rotary click input
+    - [x] have default rotary mode per-layer
+    - [x] default: click to enter Layer Select layer
+    - [x] default: volume control on rotation
 - [ ] keep breaking out different aspects of the code into different files
     - [x] file for layer mappings
-        - [ ] individual files for layer mappings
-            - [ ] list parent layer
-            - [ ] define a color scheme and pattern for the layer
     - [x] file for key actions
 - [ ] see if the macropad can pretend to be more than one HID
 - [ ] support for tap, two-tap, and hold actions
