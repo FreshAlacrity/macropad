@@ -9,7 +9,7 @@ layout = {
     "Mouse": [
         [], [], ["Layer Select"],
         ["vol_up"], ["m_drag"], [], [],
-        ["vol_dn"], ["lf_click"], ["m_up"], ["rt_click"],
+        ["vol_dn"], ["lf_click"], ["m_up"], ["m_ur"],  # ["rt_click"],
         [], ["m_lf"], ["m_dn"], ["m_rt"]
     ],
     "Game": [

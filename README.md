@@ -11,6 +11,7 @@ CircuitPython for [Adafruit MacroPad RP2040](https://www.adafruit.com/product/51
 ## To Do
 - [x] get the screen rotated 90 degrees
 - [x] add a way to include descriptions of key actions
+- [ ] make a global value to track mouse movement
 - [ ] key + rotary actions
     - [ ] undo/redo
     - [ ] cut/copy/paste/select-all

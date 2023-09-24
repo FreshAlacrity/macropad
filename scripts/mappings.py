@@ -18,18 +18,30 @@ kbd = Keyboard(usb_hid.devices)
 m = Mouse(usb_hid.devices)
 cc = ConsumerControl(usb_hid.devices)
 # alternatively: macropad.consumer_control.send
+mouse_delta = {"x": 0, "y": 0}
 
-def mouse_move(dir):
+# @todo mouse_angular_move(theta) that calls mouse_move(cos(theta), sin(theta))
+
+def mouse_move(x, y):
+    global mouse_delta
     speed = mouse_speed
-    axis = dir % 2
-    sign = 1 + int(dir >= 2) * -2
-    x = speed * sign * axis
-    y = speed * sign * (axis ^ 1)
-    m.move(x=x, y=y)
+    mouse_delta["x"] = mouse_delta["x"] + x * speed
+    mouse_delta["y"] = mouse_delta["y"] + y * speed
+
+
+def close_out():
+    # Called at the end of the main loop
+    global mouse_delta
+    if mouse_delta["x"] != 0 or mouse_delta["y"] != 0:
+        m.move(x=mouse_delta["x"], y=mouse_delta["y"])
+        mouse_delta = {"x": 0, "y": 0}
+        print("\n------------\n")
+
 
 # Layer Actions
 def current_layer_name():
     return layer_names[current_layer]
+
 
 # @todo check that these work and wrap properly:
 def layer_up():
@@ -37,10 +49,12 @@ def layer_up():
     current_layer = (current_layer + 1) % len(layer_names)
     layer(current_layer_name())
 
+
 def layer_down():
     global current_layer
     current_layer = (current_layer - 1) % len(layer_names)
     layer(current_layer_name())
+
 
 def layer_select(move=0):
     global selected_layer
@@ -49,6 +63,7 @@ def layer_select(move=0):
     else:
         selected_layer = (selected_layer + move) % len(layer_names)
         print("\n\nTap for\n{}\n".format(layer_names[selected_layer]))
+
 
 def layer(layer_name, inputs=0, time=sleep_time, entering=True):
     # @todo implement N inputs to leave the layer
@@ -59,6 +74,7 @@ def layer(layer_name, inputs=0, time=sleep_time, entering=True):
     current_layer = layer_names.index(layer_name)
     selected_layer = current_layer
     print("\nCurrent Layer:\n", current_layer_name())
+
 
 # @todo add arrow key support
 key_actions = {
@@ -97,17 +113,25 @@ key_actions = {
         "hint": "Toggle off mouse drag (release left button)",
     },
     "m_rt": {
-        "action": [(mouse_move, 1), 0, (mouse_move, 1)],
-        "hint": "Move the mouse right"},
+        "action": [0, 0, (mouse_move, (1, 0))],
+        "hint": "Move the mouse right",
+    },
+    "m_ur": {
+        "action": [0, 0, (mouse_move, (1, -1))],
+        "hint": "Move the mouse up and right",
+    },
     "m_lf": {
-        "action": [(mouse_move, 3), 0, (mouse_move, 3)],
-        "hint": "Move the mouse left"},
+        "action": [0, 0, (mouse_move, (-1, 0))],
+        "hint": "Move the mouse left",
+    },
     "m_up": {
-        "action": [(mouse_move, 2), 0, (mouse_move, 2)],
-        "hint": "Move the mouse up"},
+        "action": [0, 0, (mouse_move, (0, -1))],
+        "hint": "Move the mouse up",
+    },
     "m_dn": {
-        "action": [(mouse_move, 0), 0, (mouse_move, 0)],
-        "hint": "Move the mouse down"},
+        "action": [0, 0, (mouse_move, (0, 1))],
+        "hint": "Move the mouse down",
+    },
     "m_w": {
         "action": [(kbd.press, Keycode.W), (kbd.release, Keycode.W)],
         "hint": "Gamepad style W",
@@ -146,6 +170,7 @@ def add_standard_key_actions():
 
 add_standard_key_actions()
 
+
 def add_layer_switch_actions():
     for name in layer_names:
         # @todo check that there's not an action collision
@@ -155,11 +180,13 @@ def add_layer_switch_actions():
             )
         else:
             key_actions[name] = {
-                    "action": (layer, name),
-                    "hint": "Switch to {} layer".format(name),
-                }
+                "action": (layer, name),
+                "hint": "Switch to {} layer".format(name),
+            }
+
 
 add_layer_switch_actions()
+
 
 def print_key_actions_list():
     # @todo sort by length = 0 and then alphabetically?
@@ -168,9 +195,7 @@ def print_key_actions_list():
 
 def valid_action(action_name):
     if not isinstance(action_name, str):
-        raise Exception(
-            "This action name is not a string: '{}'".format(action_name)
-        )
+        raise Exception("This action name is not a string: '{}'".format(action_name))
     elif action_name not in key_actions:
         raise Exception(
             "There is no action assigned to this name: '{}'".format(action_name)
@@ -180,6 +205,7 @@ def valid_action(action_name):
             "There is no function assigned to action '{}'".format(action_name)
         )
     return True
+
 
 def valid_index(action, index):
     if index >= len(action):
@@ -191,25 +217,25 @@ def valid_index(action, index):
     else:
         return True
 
+
 def do_key_action(action_name, index=0):
     # Note: currently for index 0 is press, 1 is release, 2 is hold
     # macropad.play_tone(396, .2)
+    indexes = ["press", "release", "hold"]
+    print("Action received:", action_name, indexes[index])
 
     if not valid_action(action_name):
         return
     else:
         action = key_actions[action_name]["action"]
         # print(key_actions[action_name]["hint"])
-
     # Handle case: only press action specified
     if not isinstance(action, list):
         action = [action]
-
     if valid_index(action, index):
         action = action[index]
     else:
         return
-
     """
     # Currently erroring badly, @todo figure out why
     # Track duration of key hold (for things like acceleration)

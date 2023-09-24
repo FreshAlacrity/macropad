@@ -10,6 +10,7 @@ from adafruit_macropad import MacroPad
 from layers import get_action
 from mappings import do_key_action
 from mappings import current_layer_name
+from mappings import close_out
 
 # Initialize and rotate the MacroPad so that the OLED is on the left
 macropad = MacroPad(90)
@@ -20,13 +21,12 @@ keys_held = []
 
 
 def input_action(key_num, index=0):
-    # index_translation = ["down", "up", "hold"]
-    # print("KEY:", key_num, index_translation[index])
+    print("KEY:", key_num, ["down", "up", "hold"][index])
 
     # issue here: layer change doesn't seem to be sticking
     action = get_action(key_num, current_layer_name())
-    # print("LAYER:", current_layer_name())
-    # print("ACTION:", action)
+    print("LAYER:", current_layer_name())
+    print("ACTION:", action)
     do_key_action(action, index)
     # @todo log the action somehow
 
@@ -40,8 +40,8 @@ def init():
     macropad.pixels[11] = (0, 10, 50)
 
     do_key_action("Mouse")
-    print("LAYER:", current_layer_name())
-    print("init complete")
+    # print("LAYER:", current_layer_name())
+    # print("init complete")
 
 
 # Main Loop
@@ -66,11 +66,11 @@ while True:
 
         if macropad.keys.events.overflowed:
             raise Exception("Key event overflow!")
-        else:
-            print(keys_held)
+        # else:
+        #    print(keys_held)
 
-        for keys in keys_held:
-            input_action(key_num, 2)
+        for key in keys_held:
+            input_action(key, 2)
 
         # Check for rotary encoder input
         macropad.encoder_switch_debounced.update()
@@ -88,6 +88,9 @@ while True:
             input_action(0, 0)
 
         encoder_position = current_position
+
+        # Implement registered mouse movements etc
+        close_out()
     except Exception as err:
         print("Error: {}, {}".format(err, type(err)))
         raise
