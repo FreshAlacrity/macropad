@@ -54,7 +54,7 @@ def unsleep():
 
 def init():
     print("\n\n\n\n\nBooting...\n")
-    do_key_action("Mouse")
+    do_key_action("Cassette Beasts")
     unsleep()
     # print("LAYER:", current_layer_name())
 

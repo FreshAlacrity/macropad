@@ -35,7 +35,7 @@ CircuitPython for [Adafruit MacroPad RP2040](https://www.adafruit.com/product/51
     - [x] fallthrough to parent layers for key actions when those aren't assigned
         - [ ] better parent layer function after individual file support
     - [ ] individual files for layer mappings
-        - [ ] list parent layer
+        - [x] list parent layer
             - [ ] use this to sort layer list (children come after their parents)
         - [ ] define a color scheme and pattern for the layer
     - [ ] lighting
