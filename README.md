@@ -37,13 +37,13 @@ CircuitPython for [Adafruit MacroPad RP2040](https://www.adafruit.com/product/51
     - [ ] individual files for layer mappings
         - [x] list parent layer
             - [ ] use this to sort layer list (children come after their parents)
-        - [ ] define a color scheme and pattern for the layer
-    - [ ] lighting
-        - [ ] custom lighting color and pattern for each layer
-        - [ ] Layer Select layer shows those colors on the appropriate hotkeys
+    - [x] lighting
+        - [ ] custom lighting color per layer
+        - [x] custom lighting pattern for each layer
+        - [ ] Layer Select layer shows layer colors on the appropriate hotkeys
         - [ ] if no layer pattern is specified, light the keys that have layer-specific actions
-    - [ ] implement improved mousekeys as a layer
-        - [ ] have a function that runs while it's being held?
+    - [x] implement improved mousekeys as a layer
+        - [x] have a function that runs while it's being held?
             - [ ] hold functions increment a counter
 - [x] rotary click input
     - [x] have default rotary mode per-layer

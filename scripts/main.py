@@ -19,8 +19,8 @@ macropad = MacroPad(90)
 
 # Set initial values
 encoder_position = 0
-idle_time = 0
-sleep_at = 10000
+idle_time = 1
+sleep_at = 100000
 keys_held = []
 
 
@@ -41,21 +41,21 @@ def sleep():
         macropad.pixels[i] = (0, 0, 0)
 
 
-def unsleep():
+def unsleep(mandatory=False):
     # @todo light up the keypad corresponding to the *selected_layer*
     global idle_time
-    if idle_time != 0:
+    if idle_time != 0 or mandatory:
         idle_time = 0
         color = get_layer_color(current_layer_name())
-        pattern = get_layer_pattern()  # @todo use layer name here
+        pattern = get_layer_pattern(current_layer_name())
         for i in pattern:
             macropad.pixels[i] = color
 
 
 def init():
     print("\n\n\n\n\nBooting...\n")
-    do_key_action("Cassette Beasts")
-    unsleep()
+    do_key_action("Minecraft")
+    unsleep(mandatory=True)
     # print("LAYER:", current_layer_name())
 
 
@@ -65,7 +65,6 @@ while True:
     idle_time += 1
     try:
         while macropad.keys.events:
-            unsleep()
             key_event = macropad.keys.events.get()
             if key_event:
                 # @todo can this get more than one event per loop?
@@ -81,6 +80,8 @@ while True:
                     input_action(key_num, 1)
                     keys_held.remove(key_num)
 
+            unsleep()
+
         if macropad.keys.events.overflowed:
             raise Exception("Key event overflow!")
         # else:
@@ -91,9 +92,9 @@ while True:
                 sleep()
 
         else:
-            unsleep()
             for key in keys_held:
                 input_action(key, 2)
+            unsleep()
 
         # Check for rotary encoder input
         macropad.encoder_switch_debounced.update()
