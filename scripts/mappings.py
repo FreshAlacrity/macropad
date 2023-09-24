@@ -1,10 +1,13 @@
+import time
 import usb_hid
 from adafruit_hid.keyboard import Keyboard
+from adafruit_hid.keyboard_layout_us import KeyboardLayoutUS
 from adafruit_hid.keycode import Keycode
 from adafruit_hid.mouse import Mouse
 from adafruit_hid.consumer_control import ConsumerControl
 from adafruit_hid.consumer_control_code import ConsumerControlCode
 from layers import list_layer_names
+
 
 layer_names = list_layer_names()
 mouse_speed = 10
@@ -16,11 +19,41 @@ hold_duration = {}
 
 # Set up abbreviations for different devices
 kbd = Keyboard(usb_hid.devices)
+us_layout = KeyboardLayoutUS(kbd)
 m = Mouse(usb_hid.devices)
 cc = ConsumerControl(usb_hid.devices)
 # alternatively: macropad.consumer_control.send
 mouse_delta = {"x": 0, "y": 0}
 
+def macro(string):
+    # print("All:", list(dir(Keycode)))
+    aliases = {
+        "WIN": "WINDOWS",
+        "CTRL": "CONTROL"
+    }
+
+    def alias(string):
+        if string.upper() in aliases:
+            return aliases[string.upper()]
+        else:
+            return string
+
+    def check_code(string):
+        return hasattr(Keycode, string.upper())
+
+    def get_code(string):
+        return getattr(Keycode, string.upper())
+
+    combos = string.split(" > ")
+    for index, segment in enumerate(combos):
+        codes = segment.split(" + ")
+        codes = list(map(alias, codes))
+        if all(map(check_code, codes)):
+            kbd.send(*tuple(map(get_code, codes)))
+            if index < len(combos) - 1:
+                time.sleep(0.2)  # allow time for execution
+        else:
+            us_layout.write(segment)
 
 def mouse_move(x, y):
     global mouse_delta
@@ -35,7 +68,7 @@ def close_out():
     if mouse_delta["x"] != 0 or mouse_delta["y"] != 0:
         m.move(x=mouse_delta["x"], y=mouse_delta["y"])
         mouse_delta = {"x": 0, "y": 0}
-    print("\n------------\n")
+    # print("\n----------\n")
 
 
 # Layer Actions
@@ -75,10 +108,13 @@ def layer(layer_name, inputs=0, time=sleep_time, entering=True):
     selected_layer = current_layer
     print("\nCurrent Layer:\n", current_layer_name())
 
-
 # @todo add arrow key support
 key_actions = {
     "blank": {"action": (print, "Key Unassigned"), "hint": "Unassigned key action"},
+    "drive_f": {
+        "action": (macro, "WIN + E > CTRL > CTRL > CTRL + L > F: > ENTER"),
+        "hint": "Open drive F (Windows only!)"
+        },
     "l_up": {"action": layer_up, "hint": "Go up one layer"},
     "l_dn": {"action": layer_down, "hint": "Go down one layer"},
     "ls_up": {"action": (layer_select, 1), "hint": "Scroll up one layer"},
@@ -182,7 +218,6 @@ def add_standard_key_actions():
 
 add_standard_key_actions()
 
-
 def add_layer_switch_actions():
     for name in layer_names:
         # @todo check that there's not an action collision
@@ -230,11 +265,21 @@ def valid_index(action, index):
         return True
 
 
+def track_hold(action_name, index):
+    global hold_duration
+    if index == 1:
+        hold_duration[action_name] = 0
+    elif index == 2:
+        if action_name in hold_duration:
+            hold_duration[action_name] = hold_duration[action_name] + 1
+        else:
+            hold_duration[action_name] = 1
+
 def do_key_action(action_name, index=0):
     # Note: currently for index 0 is press, 1 is release, 2 is hold
     # macropad.play_tone(396, .2)
-    indexes = ["press", "release", "hold"]
-    # print("Action received: '{}' type {}".format(action_name, indexes[index]))
+    # action_type = ["press", "release", "hold"][index]
+    # print("\nAction received: '{}'\nType: {}\n".format(action_name, action_type))
 
     if not valid_action(action_name):
         return
@@ -248,15 +293,8 @@ def do_key_action(action_name, index=0):
         action = action[index]
     else:
         return
-    """
-    # Currently erroring badly, @todo figure out why
-    # Track duration of key hold (for things like acceleration)
-    global hold_duration
-    if index == 1:
-        hold_duration[action_name] = 0
-    elif index == 2:
-        hold_duration[action_name] = hold_duration[action_name] + 1
-    """
+
+    track_hold(action_name, index)
 
     if type(action) == type(do_key_action):
         # print("Executing basic function")

@@ -1,11 +1,11 @@
-# Version 0.2
+# Version 0.3
 
-# CTRL + C > any key to enter REPL, CTRL + D to exit
+# Mu: CTRL + C > any key to enter REPL, CTRL + D to exit
 
 # Based on: MacroPad HID keyboard and mouse demo,
 # Unlicense 2021 by Kattni Rembor for Adafruit Induencoder_positiones
 
-# import time
+import time
 from adafruit_macropad import MacroPad
 from layers import get_action
 from layers import get_layer_color
@@ -17,20 +17,20 @@ from mappings import close_out
 # Initialize and rotate the MacroPad so that the OLED is on the left
 macropad = MacroPad(90)
 
-# Set initial values
-encoder_position = 0
-idle_time = 1
+# Settings
+init_action = "Mouse"
 sleep_at = 100000
+
+# Initial values
+idle_time = 0
+encoder_position = 0
 keys_held = []
 
 
 def input_action(key_num, index=0):
-    print("KEY:", key_num, ["down", "up", "hold"][index])
-
-    # issue here: layer change doesn't seem to be sticking
     action = get_action(key_num, current_layer_name())
-    print("LAYER:", current_layer_name())
-    print("ACTION:", action)
+    # print("KEY:", key_num, ["down", "up", "hold"][index])
+    # print("ACTION:", action)
     do_key_action(action, index)
     # @todo log the action somehow
 
@@ -41,21 +41,24 @@ def sleep():
         macropad.pixels[i] = (0, 0, 0)
 
 
-def unsleep(mandatory=False):
+def unsleep():
     # @todo light up the keypad corresponding to the *selected_layer*
     global idle_time
-    if idle_time != 0 or mandatory:
-        idle_time = 0
-        color = get_layer_color(current_layer_name())
-        pattern = get_layer_pattern(current_layer_name())
-        for i in pattern:
-            macropad.pixels[i] = color
+    idle_time = 0
+
+
+def update():
+    close_out()
+    color = get_layer_color(current_layer_name())
+    pattern = get_layer_pattern(current_layer_name())
+    for i in pattern:
+        macropad.pixels[i] = color
 
 
 def init():
     print("\n\n\n\n\nBooting...\n")
-    do_key_action("Minecraft")
-    unsleep(mandatory=True)
+    do_key_action(init_action)
+    update()
     # print("LAYER:", current_layer_name())
 
 
@@ -67,9 +70,8 @@ while True:
         while macropad.keys.events:
             key_event = macropad.keys.events.get()
             if key_event:
-                # @todo can this get more than one event per loop?
 
-                # Add two to the key number to skip the rotary encoder inputs
+                # Adds 3 to skip the rotary encoder inputs
                 key_num = key_event.key_number + 3
 
                 if key_event.pressed:
@@ -118,7 +120,7 @@ while True:
 
         # Close out any pending actions (mouse movement etc)
         if idle_time == 0:
-            close_out()
+            update()
 
     except Exception as err:
         print("Error: {}, {}".format(err, type(err)))
