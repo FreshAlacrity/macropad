@@ -1,16 +1,19 @@
+from random import randint
+from random import seed
+
 layout = {
     # Note: The first two entries are rotary encoder up/down
     "Default": [
         ["vol_dn"], ["vol_up"], ["Layer Select"],
-        ["vol_up"], [], [], [],
-        ["vol_dn"], [], [], [],
-        [], [], [], []
+        ["vol_up"], ["lf_click"], ["m_up"], ["rt_click"],
+        ["vol_dn"], ["m_lf"], ["m_dn"], ["m_rt"],
+        ["m_stop"], ["l_tab"], ["m_drag"], ["r_tab"],
     ],
     "Mouse": [
         [], [], ["Layer Select"],
-        ["vol_up"], ["m_drag"], [], [],
-        ["vol_dn"], ["lf_click"], ["m_up"], ["m_ur"],  # ["rt_click"],
-        [], ["m_lf"], ["m_dn"], ["m_rt"]
+        [], ["lf_click"], ["m_up"], ["rt_click"],
+        [], ["m_lf"], ["m_dn"], ["m_rt"],
+        ["m_stop"], ["l_tab"], ["m_drag"], ["r_tab"],
     ],
     "Game": [
         [], [], [],
@@ -53,6 +56,7 @@ layout = {
     ]
 }
 
+
 def list_layer_names():
     return list(layout.keys())
 
@@ -62,23 +66,39 @@ def has_action(layer_name, key_num):
 
     return len(layout[layer_name][key_num]) > 0
 
+def get_parent_layer():
+    return "Default"  # @todo
+
+def get_layer_pattern():
+    return (2, 5, 7) # @todo
+
+def get_layer_color(name):
+    seed(sum(map(ord, name)))
+    vals = []
+    for v in range(3):
+        vals.append(randint(0, 255))
+    total = sum(vals)
+
+    def reg(num):
+        return int(num / (total / 100))
+    return tuple(map(reg, vals))
+
 def get_action(key_num, layer_name):
-    # @later make this more sophisticated with a fallback to parent layers
 
     # Set default action
     action_name = "blank"
 
-    # @todo here fall through to lower layer
-
-    if has_action(layer_name, key_num):
-        action_name = layout[layer_name][key_num]
-        if not isinstance(action_name, str):
-            if len(action_name) == 1:
-                action_name = action_name[0]
-            else:
-                action_name = action_name[1]
-
-    if not isinstance(action_name, str):
-        raise Exception("This action is not a string!")
+    # Limited loop so it can't break if the base layer is blank
+    for attempt in range(3):
+        if has_action(layer_name, key_num):
+            action_name = layout[layer_name][key_num]
+            if not isinstance(action_name, str):
+                if len(action_name) == 1:
+                    action_name = action_name[0]
+                else:
+                    action_name = action_name[1]
+            break
+        else:
+            layer_name = get_parent_layer()
 
     return action_name

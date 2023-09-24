@@ -10,6 +10,7 @@ CircuitPython for [Adafruit MacroPad RP2040](https://www.adafruit.com/product/51
 
 ## To Do
 - [x] get the screen rotated 90 degrees
+- [ ] make a function that will ASCII up a cheat sheet for the layers?
 - [x] add a way to include descriptions of key actions
 - [x] make a global value to track mouse movement
     - [ ] add a specialized gaming-mouse layer where it accelerates over a bit of time and then decelerates over a bit of time for viewer comfort
@@ -17,7 +18,10 @@ CircuitPython for [Adafruit MacroPad RP2040](https://www.adafruit.com/product/51
         - [ ] try damped harmonic oscillator mouse movement where it gently eases back a bit after the key is released
     - [ ] mouse_angular_move(theta) that calls mouse_move(cos(theta), sin(theta))
 - [ ] key + rotary actions
+    - [ ] open the CIRCUITPY drive
+    - [ ] increase and decrease cursor speed
     - [ ] undo/redo
+    - [ ] Discord hotkeys
     - [ ] cut/copy/paste/select-all
     - [ ] macro strings (lowercase them automatically?)
         - [ ] save: "CTRL + S"
@@ -26,17 +30,18 @@ CircuitPython for [Adafruit MacroPad RP2040](https://www.adafruit.com/product/51
     - [x] scroll through available layers
     - [ ] increase and decrease brightness
     - [ ] scrollwheel action
-    - [ ] increase and decrease cursor speed
     - [ ] alias numbers, i.e.  1 or "1" to "one"
 - [ ] layers
+    - [x] fallthrough to parent layers for key actions when those aren't assigned
+        - [ ] better parent layer function after individual file support
     - [ ] individual files for layer mappings
         - [ ] list parent layer
             - [ ] use this to sort layer list (children come after their parents)
         - [ ] define a color scheme and pattern for the layer
-    - [ ] fallthrough to lower layers for key actions when those aren't assigned
     - [ ] lighting
         - [ ] custom lighting color and pattern for each layer
         - [ ] Layer Select layer shows those colors on the appropriate hotkeys
+        - [ ] if no layer pattern is specified, light the keys that have layer-specific actions
     - [ ] implement improved mousekeys as a layer
         - [ ] have a function that runs while it's being held?
             - [ ] hold functions increment a counter
@@ -57,13 +62,16 @@ CircuitPython for [Adafruit MacroPad RP2040](https://www.adafruit.com/product/51
               - [ ] have the first keypress back from sleep do nothing
           - [ ] roll back to previous layer when either elapses
     - [ ] hold actions: use auto-layers to implement Leader keys
-- [ ] work on incorporating a pomodoro timer using the time lib
-    - [ ] show timer progress on the OLED
+
 - [ ] count keypresses
 - [ ] add key action for changing the audio in/out
     with the FxSound key combinations
-- [ ] find the repo for the little ASCII python pet
-    - [ ] see if we can render the cute faces to the OLED
-- [ ] attach second OLED (can those be chained with other STEMMA QT boards?)
-- [ ] split key functions and mapping from those to key names into a separate file
+- [ ] screen(s)
+    - [ ] work on incorporating a pomodoro timer using the time lib
+        - [ ] show timer progress on the OLED
+    - [ ] figure out if there's a way to have a log in the serial pane/second OLED without printing to the main screen
+    - [ ] find the repo for the little ASCII python pet
+        - [ ] see if we can render the cute faces to the OLED
+    - [ ] attach second OLED (can those be chained with other STEMMA QT boards?)
+- [x] split key functions and mapping from those to key names into a separate file
 - [ ] support for a plover mode?

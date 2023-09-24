@@ -8,6 +8,8 @@
 # import time
 from adafruit_macropad import MacroPad
 from layers import get_action
+from layers import get_layer_color
+from layers import get_layer_pattern
 from mappings import do_key_action
 from mappings import current_layer_name
 from mappings import close_out
@@ -32,19 +34,23 @@ def input_action(key_num, index=0):
     do_key_action(action, index)
     # @todo log the action somehow
 
+
 def sleep():
     print("\n\n\n\n\n\n...zZzzZZ\n")
-    macropad.pixels[6] = (0, 0, 0)
-    macropad.pixels[9] = (0, 0, 0)
-    macropad.pixels[11] = (0, 0, 0)
+    for i in range(12):
+        macropad.pixels[i] = (0, 0, 0)
+
 
 def unsleep():
     # @todo light up the keypad corresponding to the *selected_layer*
     global idle_time
-    idle_time = 0
-    macropad.pixels[6] = (0, 10, 50)
-    macropad.pixels[9] = (0, 10, 50)
-    macropad.pixels[11] = (0, 10, 50)
+    if idle_time != 0:
+        idle_time = 0
+        color = get_layer_color(current_layer_name())
+        pattern = get_layer_pattern()  # @todo use layer name here
+        for i in pattern:
+            macropad.pixels[i] = color
+
 
 def init():
     print("\n\n\n\n\nBooting...\n")
@@ -95,20 +101,24 @@ while True:
 
         if macropad.encoder_switch_debounced.pressed:
             input_action(2, 0)
+            unsleep()
 
         # Clockwise turn detected
         if macropad.encoder > encoder_position:
             input_action(1, 0)
+            unsleep()
 
         # Counterclockwise turn detected
         elif macropad.encoder < encoder_position:
             input_action(0, 0)
+            unsleep()
 
         encoder_position = current_position
 
         # Close out any pending actions (mouse movement etc)
         if idle_time == 0:
             close_out()
+
     except Exception as err:
         print("Error: {}, {}".format(err, type(err)))
         raise
