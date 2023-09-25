@@ -47,7 +47,7 @@ def macro(string):
         if all(map(check_code, codes)):
             kbd.send(*tuple(map(get_keycode, codes)))
             if index < len(combos) - 1:
-                time.sleep(0.2)  # allow time for execution
+                time.sleep(0.3)  # allow time for execution
         else:
             us_layout.write(segment)
 
