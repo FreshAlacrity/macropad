@@ -5,6 +5,9 @@
 # Based on: MacroPad HID keyboard and mouse demo,
 # Unlicense 2021 by Kattni Rembor for Adafruit Induencoder_positiones
 
+# Since the workspace setting isn't working:
+# pyright: reportMissingImports=false
+
 import time
 from adafruit_macropad import MacroPad
 from layers import get_action
@@ -27,8 +30,9 @@ encoder_position = 0
 keys_held = []
 
 
-def input_action(key_num, index=0):
-    action = get_action(key_num, current_layer_name())
+def input_action(current_key_num, index=0):
+    """Retrieves and executes the action assigned to this key number on the current layer."""
+    action = get_action(current_key_num, current_layer_name())
     # print("KEY:", key_num, ["down", "up", "hold"][index])
     # print("ACTION:", action)
     do_key_action(action, index)

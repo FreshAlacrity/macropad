@@ -6,10 +6,9 @@ from adafruit_hid.keycode import Keycode
 from adafruit_hid.mouse import Mouse
 from adafruit_hid.consumer_control import ConsumerControl
 from adafruit_hid.consumer_control_code import ConsumerControlCode
-from layers import list_layer_names
+from layers import get_layer_names  # type: ignore
 
-
-layer_names = list_layer_names()
+layer_names = get_layer_names()
 mouse_speed = 10
 mouse_scoot = 2
 sleep_time = 1000
@@ -21,16 +20,16 @@ hold_duration = {}
 kbd = Keyboard(usb_hid.devices)
 us_layout = KeyboardLayoutUS(kbd)
 m = Mouse(usb_hid.devices)
-cc = ConsumerControl(usb_hid.devices)
 # alternatively: macropad.consumer_control.send
 mouse_delta = {"x": 0, "y": 0}
 
+
+def get_keycode(string):
+    return getattr(Keycode, string.upper())
+
 def macro(string):
     # print("All:", list(dir(Keycode)))
-    aliases = {
-        "WIN": "WINDOWS",
-        "CTRL": "CONTROL"
-    }
+    aliases = {"WIN": "WINDOWS", "CTRL": "CONTROL"}
 
     def alias(string):
         if string.upper() in aliases:
@@ -41,19 +40,17 @@ def macro(string):
     def check_code(string):
         return hasattr(Keycode, string.upper())
 
-    def get_code(string):
-        return getattr(Keycode, string.upper())
-
     combos = string.split(" > ")
     for index, segment in enumerate(combos):
         codes = segment.split(" + ")
         codes = list(map(alias, codes))
         if all(map(check_code, codes)):
-            kbd.send(*tuple(map(get_code, codes)))
+            kbd.send(*tuple(map(get_keycode, codes)))
             if index < len(combos) - 1:
                 time.sleep(0.2)  # allow time for execution
         else:
             us_layout.write(segment)
+
 
 def mouse_move(x, y):
     global mouse_delta
@@ -108,24 +105,66 @@ def layer(layer_name, inputs=0, time=sleep_time, entering=True):
     selected_layer = current_layer
     print("\nCurrent Layer:\n", current_layer_name())
 
-# @todo add arrow key support
+def cc(control_type):
+    cc = ConsumerControl(usb_hid.devices)
+    cc.send(getattr(ConsumerControlCode, control_type))
+
+
+
+"""
+To Add
+# Pause or resume playback.
+
+
+# Roll the mouse wheel away from the user one unit.
+m.move(wheel=-1)
+
+# Press and hold the shifted '1' key to get '!' (exclamation mark).
+kbd.press(Keycode.SHIFT, Keycode.ONE)
+
+# Release the ONE key and send another report.
+kbd.release(Keycode.ONE)
+
+# Press shifted '2' to get '@'.
+kbd.press(Keycode.TWO)
+
+# Release all keys.
+kbd.release_all()
+
+"ConsumerControlCode": [
+  'RECORD',
+  'FAST_FORWARD',
+  'REWIND',
+  'SCAN_NEXT_TRACK',
+  'SCAN_PREVIOUS_TRACK',
+  'STOP',
+  'EJECT',
+  'PLAY_PAUSE',
+  'MUTE',
+  'VOLUME_DECREMENT',
+  'VOLUME_INCREMENT',
+  'BRIGHTNESS_DECREMENT',
+  'BRIGHTNESS_INCREMENT'
+],
+
+"""
 key_actions = {
     "blank": {"action": (print, "Key Unassigned"), "hint": "Unassigned key action"},
     "drive_f": {
         "action": (macro, "WIN + E > CTRL > CTRL > CTRL + L > F: > ENTER"),
-        "hint": "Open drive F (Windows only!)"
-        },
-    "l_up": {"action": layer_up, "hint": "Go up one layer"},
-    "l_dn": {"action": layer_down, "hint": "Go down one layer"},
-    "ls_up": {"action": (layer_select, 1), "hint": "Scroll up one layer"},
-    "ls_dn": {"action": (layer_select, -1), "hint": "Scroll down one layer"},
-    "ls_go": {"action": layer_select, "hint": "Move to the selected layer"},
+        "hint": "Open drive F (Windows only!)",
+    },
+    "l_up": {"action": layer_up, "hint": "Go up one layout layer (immediately)"},
+    "l_dn": {"action": layer_down, "hint": "Go down one layout layer (immediately)"},
+    "ls_up": {"action": (layer_select, 1), "hint": "Scroll up one layout layer"},
+    "ls_dn": {"action": (layer_select, -1), "hint": "Scroll down one layout layer"},
+    "ls_go": {"action": layer_select, "hint": "Move to the selected layout layer"},
     "vol_up": {
-        "action": (cc.send, ConsumerControlCode.VOLUME_INCREMENT),
+        "action": (cc, "VOLUME_INCREMENT"),
         "hint": "Turn up the sound volume",
     },
     "vol_dn": {
-        "action": (cc.send, ConsumerControlCode.VOLUME_DECREMENT),
+        "action": (cc, "VOLUME_DECREMENT"),
         "hint": "Turn down the sound volume",
     },
     "rt_click": {
@@ -149,35 +188,19 @@ key_actions = {
         "hint": "Toggle off mouse drag (release left button)",
     },
     "m_rt": {
-        "action": [
-            (mouse_move, (mouse_scoot, 0)),
-            0,
-            (mouse_move, (1, 0))
-        ],
+        "action": [(mouse_move, (mouse_scoot, 0)), 0, (mouse_move, (1, 0))],
         "hint": "Move the mouse right",
     },
     "m_lf": {
-        "action": [
-            (mouse_move, (-mouse_scoot, 0)),
-            0,
-            (mouse_move, (-1, 0))
-        ],
+        "action": [(mouse_move, (-mouse_scoot, 0)), 0, (mouse_move, (-1, 0))],
         "hint": "Move the mouse left",
     },
     "m_up": {
-        "action": [
-            (mouse_move, (0, -mouse_scoot)),
-            0,
-            (mouse_move, (0, -1))
-        ],
+        "action": [(mouse_move, (0, -mouse_scoot)), 0, (mouse_move, (0, -1))],
         "hint": "Move the mouse up",
     },
     "m_dn": {
-        "action": [
-            (mouse_move, (0, mouse_scoot)),
-            0,
-            (mouse_move, (0, 1))
-        ],
+        "action": [(mouse_move, (0, mouse_scoot)), 0, (mouse_move, (0, 1))],
         "hint": "Move the mouse down",
     },
     "m_w": {
@@ -215,8 +238,8 @@ def add_standard_key_actions():
                 "hint": "Keyboard input: '{}'".format(key),
             }
 
-
 add_standard_key_actions()
+
 
 def add_layer_switch_actions():
     for name in layer_names:
@@ -230,7 +253,6 @@ def add_layer_switch_actions():
                 "action": (layer, name),
                 "hint": "Switch to {} layer".format(name),
             }
-
 
 add_layer_switch_actions()
 
@@ -275,6 +297,7 @@ def track_hold(action_name, index):
         else:
             hold_duration[action_name] = 1
 
+
 def do_key_action(action_name, index=0):
     # Note: currently for index 0 is press, 1 is release, 2 is hold
     # macropad.play_tone(396, .2)
@@ -312,53 +335,3 @@ def do_key_action(action_name, index=0):
             action[0](arg)
     else:
         print("Error - key input not a function")
-
-
-"""
-all possible keycodes are listed here:
-    https://usb.org/sites/default/files/hut1_21_0.pdf#page=83
-note that keycodes are the names for key *positions* on a US keyboard
-
-# As yet unsupported actions:
-
-# Pause or resume playback.
-cc.send(ConsumerControlCode.PLAY_PAUSE)
-
-# Move the mouse diagonally to the upper left.
-m.move(-100, -100, 0)
-
-# Roll the mouse wheel away from the user one unit.
-m.move(wheel=-1)
-
-# Type control-x.
-kbd.send(Keycode.CONTROL, Keycode.X)
-
-# Press and hold the shifted '1' key to get '!' (exclamation mark).
-kbd.press(Keycode.SHIFT, Keycode.ONE)
-# Release the ONE key and send another report.
-kbd.release(Keycode.ONE)
-# Press shifted '2' to get '@'.
-kbd.press(Keycode.TWO)
-# Release all keys.
-kbd.release_all()
-"""
-
-
-"""
-"ConsumerControlCode": [
-  'RECORD',
-  'FAST_FORWARD',
-  'REWIND',
-  'SCAN_NEXT_TRACK',
-  'SCAN_PREVIOUS_TRACK',
-  'STOP',
-  'EJECT',
-  'PLAY_PAUSE',
-  'MUTE',
-  'VOLUME_DECREMENT',
-  'VOLUME_INCREMENT',
-  'BRIGHTNESS_DECREMENT',
-  'BRIGHTNESS_INCREMENT'
-],
-
-"""

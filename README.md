@@ -7,9 +7,18 @@ CircuitPython for [Adafruit MacroPad RP2040](https://www.adafruit.com/product/51
 - https://docs.circuitpython.org/projects/macropad/en/latest/api.html
 - https://docs.circuitpython.org/projects/hid/en/latest/
 - https://docs.circuitpython.org/projects/hid/en/latest/examples.html#simple-gamepad
+- [All supported keycodes](https://usb.org/sites/default/files/hut1_21_0.pdf#page=83)
+  - note that keycodes are the names for key *positions* on a US keyboard
+
+### Useful Software
+- https://github.com/rhinterndorfer/MousePointerReposition
+
+### Misc
+If pylance isn't recognizing imports from files, try Reload Window command
 
 ## To Do
 - [ ] clean up multi-line comment examples
+- [ ] have the backup and commit shortcut also close the explorer window
 - [x] get the screen rotated 90 degrees
 - [x] add a way to include descriptions of key actions
 - [x] make a global value to track mouse movement
@@ -18,12 +27,13 @@ CircuitPython for [Adafruit MacroPad RP2040](https://www.adafruit.com/product/51
         - [ ] try damped harmonic oscillator mouse movement where it gently eases back a bit after the key is released
     - [ ] mouse_angular_move(theta) that calls mouse_move(cos(theta), sin(theta))
 - [ ] key + rotary actions
-    - [ ] open the CIRCUITPY drive: "win + e > ctrl + L > F > colon > enter"
+    - [ ] generic key-held actions (for arrow keys etc)
+    - [x] open the CIRCUITPY drive
     - [ ] increase and decrease cursor speed
     - [ ] undo/redo
     - [ ] Discord hotkeys
     - [ ] cut/copy/paste/select-all
-    - [ ] macro strings (lowercase them automatically?)
+    - [x] macro strings
         - [ ] save: "CTRL + S"
         - [ ] command palette for VSCode: "CTRL + SHIFT + P"
     - [x] increase and decrease volume
