@@ -128,13 +128,15 @@ def tam_tam(face="happy"):
             "frames": 6,
         },
     }
-    mood_data = faces[face]
-    frames_elapsed = int(
-        (time.monotonic() - start_time) * 5 / (mood_data["frames"] - 1)
-    )
-    frame = frames_elapsed % len(mood_data["faces"])
-    current_face = mood_data["faces"][frame]
-    print(f"\n\n{frames_elapsed}\n{frame}\n\n{current_face}\n\n\n||||||||||")
+    # Refresh the display only every N cycles
+    if idle_time % 100 == 0:
+        mood_data = faces[face]
+        frames_elapsed = int(
+            (time.monotonic() - start_time) * 5 / (mood_data["frames"] - 1)
+        )
+        frame = frames_elapsed % len(mood_data["faces"])
+        current_face = mood_data["faces"][frame]
+        print(f"\n\n{frames_elapsed}\n{frame}\n\n{current_face}\n\n\n||||||||||")
 
 
 def sleep():

@@ -10,6 +10,13 @@ CircuitPython for [Adafruit MacroPad RP2040](https://www.adafruit.com/product/51
 - [All supported keycodes](https://usb.org/sites/default/files/hut1_21_0.pdf#page=83)
   - note that keycodes are the names for key *positions* on a US keyboard
 
+### Possible Fonts
+- https://terminus-font.sourceforge.net/
+- https://github.com/Tecate/bitmap-fonts
+- https://github.com/benwr/glean
+- https://github.com/cmvnd/fonts
+- see also https://learn.adafruit.com/custom-fonts-for-pyportal-circuitpython-display
+
 ### Useful Software
 - https://github.com/rhinterndorfer/MousePointerReposition
 
