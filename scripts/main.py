@@ -1,19 +1,18 @@
-# Version 0.3
+# Version 0.4
 
-# Mu: CTRL + C > any key to enter REPL, CTRL + D to exit
+# CTRL+ALT+R > CTRL+C to enter REPL, CTRL+D to soft reboot
 
 # Based on: MacroPad HID keyboard and mouse demo,
 # Unlicense 2021 by Kattni Rembor for Adafruit Induencoder_positiones
 
-# Since the workspace setting isn't working:
+# Since imports that work great in execution aren't being recognized:
 # pyright: reportMissingImports=false
+# pylint: disable=import-error
 
-# pylint: disable=broad-exception-raised, global-statement
+# Disabled for quick prototyping:
+# pylint: disable=broad-exception-raised
 
-import time
-import board
-from adafruit_display_text import label
-from adafruit_bitmap_font import bitmap_font
+
 from adafruit_macropad import MacroPad
 from layers import get_action
 from layers import get_layer_color
@@ -21,158 +20,80 @@ from layers import get_layer_pattern
 from mappings import do_key_action
 from mappings import current_layer_name
 from mappings import close_out
+from tamtam import update_display
+from tamtam import tam_tam
+from logs import log
 
 # Settings
-init_action = "Mouse"
-sleep_at = 100000
-font_file = "fonts/LeagueSpartan-Bold-16.bdf"
+INIT_ACTION = "Cassette Beasts"
+SLEEP_AT = 100000
+DEBUG = True
+
+log("TEST LOG")
 
 # Initialize and rotate the MacroPad so that the OLED is on the left
 macropad = MacroPad(90)
 
+
 # Initial values
-start_time = time.monotonic()
-idle_time = 0
-encoder_position = 0
+SETTINGS = {
+    "idle_time": 0,
+    "encoder_position": 0
+}
 keys_held = []
-
-
-def show_glyph():
-    # see https://github.com/adafruit/Adafruit_CircuitPython_Bitmap_Font/blob/main/examples/bitmap_font_label_simpletest.py
-
-    # use built in display (MagTag, PyPortal, PyGamer, PyBadge, CLUE, etc.)
-    # see guide for setting up external displays (TFT / OLED breakouts, RGB matrices, etc.)
-    # https://learn.adafruit.com/circuitpython-display-support-using-displayio/display-and-display-bus
-
-    # Set text, font, and color
-    text = "HELLO\nWORLD"
-    font = bitmap_font.load_font(font_file)
-
-    # Create the text label
-    text_area = label.Label(font, text=text, color=0xFFFFFF)
-
-    # Set the location
-    text_area.x = 0
-    text_area.y = 10
-
-    # Show it
-    board.DISPLAY.show(text_area) # pylint: disable=no-member
-    print("here")
 
 
 def input_action(current_key_num, index=0):
     """Retrieves and executes the action assigned to this key number on the current layer."""
     action = get_action(current_key_num, current_layer_name())
-    # print("KEY:", key_num, ["down", "up", "hold"][index])
-    # print("ACTION:", action)
     do_key_action(action, index)
-    # @todo log the action somehow
+    # @todo here - log the action somehow
 
 
-def tam_tam(face="happy"):
-    faces = {
-        "egg": {
-            "faces": ["  o  ", "  O  "],
-            "frames": 10,
-        },
-        "tea": {
-            "faces": ["∩ _ ∩", "c(_)"],
-            "frames": 6,
-        },
-        "eating": {
-            "faces": ["∩ _ ∩", "- w -", "- θ -"],
-            "frames": 6,
-        },
-        "sick": {
-            "faces": ["X _ X", "> _ <"],
-            "frames": 6,
-        },
-        "asleep": {
-            "faces": ["- _ -", "- _ -", "- o -", "...zZzzZZ"],
-            "frames": 21,
-        },
-        "sad": {
-            "faces": ["υ _ υ", "џ _ џ", "ὺ _ ύ"],
-            "frames": 6,
-        },
-        "scared": {
-            "faces": ["° _ °", "O Д O", "; Д ;"],
-            "frames": 4,
-        },
-        "angry": {
-            "faces": ["¬ _ ¬", "ὸ _ ό", "◣ _ ◢"],
-            "frames": 4,
-        },
-        "sneaky": {
-            "faces": ["¬ ◡ ¬", "◕ ω ◕", "ὲ ◡ έ", "ὶ ◡ ί"],
-            "frames": 4,
-        },
-        "hungry": {
-            "faces": ["τ _ τ", "> _ <"],
-            "frames": 4,
-        },
-        "tired": {
-            "faces": ["v _ v", "υ _ υ", "n _ n"],
-            "frames": 3,
-        },
-        "random": {
-            "faces": ["Ξ ◡ Ξ", "◑ ◡ ◐", "' o '", "∩ _ ∩", "- ◡ ◕"],
-            "frames": 1,
-        },
-        "happy": {
-            "faces": ["◕ ◡ ◕", "- ◡ -"],
-            "frames": 4,
-        },
-        "neutral": {
-            "faces": ["• _ •", "> _ >", "• _ •", "< _ <", "• _ •", "- _ -"],
-            "frames": 6,
-        },
-    }
-    # Refresh the display only every N cycles
-    if idle_time % 100 == 0:
-        mood_data = faces[face]
-        frames_elapsed = int(
-            (time.monotonic() - start_time) * 5 / (mood_data["frames"] - 1)
-        )
-        frame = frames_elapsed % len(mood_data["faces"])
-        current_face = mood_data["faces"][frame]
-        print(f"\n\n{frames_elapsed}\n{frame}\n\n{current_face}\n\n\n||||||||||")
+def get_idle_time():
+    return SETTINGS["idle_time"]
 
 
 def sleep():
+    # @todo figure out why I can't import tam_tam
     tam_tam("asleep")
     for i in range(12):
         macropad.pixels[i] = (0, 0, 0)
 
 
 def unsleep():
-    global idle_time
-    idle_time = 0
+    SETTINGS["idle_time"] = 0
 
 
 def update():
-    if idle_time == 0:
+    if SETTINGS["idle_time"] == 0:
         close_out()
         color = get_layer_color(current_layer_name())
         pattern = get_layer_pattern(current_layer_name())
         for i in pattern:
             macropad.pixels[i] = color
-    else:
-        tam_tam()
+    elif get_idle_time() % 100 == 0:
+        # Only updates the display every N frames
+        update_display()
 
 
 def init():
     print("\n\n\n\n\nBooting...\n")
-    do_key_action(init_action)
+    do_key_action(INIT_ACTION)
     update()
-    # show_glyph()
+    update_display()
+
+    # Loop forever so you can enjoy your image
+    #while True:
+        #pass
+
     # print("LAYER:", current_layer_name())
 
 
 # Main Loop
 init()
 while True:
-    idle_time += 1
+    SETTINGS["idle_time"] += 1
     try:
         while macropad.keys.events:
             key_event = macropad.keys.events.get()
@@ -196,7 +117,7 @@ while True:
         #    print(keys_held)
 
         if len(keys_held) == 0:
-            if idle_time == sleep_at:
+            if SETTINGS["idle_time"] == SLEEP_AT:
                 sleep()
 
         else:
@@ -213,16 +134,16 @@ while True:
             unsleep()
 
         # Clockwise turn detected
-        if macropad.encoder > encoder_position:
-            input_action(1, 0)
-            unsleep()
-
-        # Counterclockwise turn detected
-        elif macropad.encoder < encoder_position:
+        if macropad.encoder > SETTINGS["encoder_position"]:
             input_action(0, 0)
             unsleep()
 
-        encoder_position = current_position
+        # Counterclockwise turn detected
+        elif macropad.encoder < SETTINGS["encoder_position"]:
+            input_action(1, 0)
+            unsleep()
+
+        SETTINGS["encoder_position"] = current_position
 
         # Close out any pending actions (mouse movement etc)
         update()

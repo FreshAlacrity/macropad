@@ -1,3 +1,11 @@
+# Since imports that work great in execution aren't being recognized:
+# pyright: reportMissingImports=false
+# pylint: disable=import-error, c-extension-no-member
+
+# Disabled for quick prototyping:
+# pylint: disable=broad-exception-raised, pointless-string-statement, missing-function-docstring
+
+
 import time
 import usb_hid
 from adafruit_hid.keyboard import Keyboard
@@ -8,34 +16,86 @@ from adafruit_hid.consumer_control import ConsumerControl
 from adafruit_hid.consumer_control_code import ConsumerControlCode
 from layers import get_layer_names  # type: ignore
 
+SETTINGS = {
+    "mouse_speed": 10,
+    "current_layer": 0,
+    "selected_layer": 0,
+    "mouse_scoot": 2,
+    "sleep_time": 1000
+}
 layer_names = get_layer_names()
-mouse_speed = 10
-mouse_scoot = 2
-sleep_time = 1000
-current_layer = 1
-selected_layer = current_layer
-hold_duration = {}
+MOUSE_DELTA = {"x": 0, "y": 0}
+HOLD_DURATION = {}
+
+# @todo Implement a standard way to do hold and release actions
+# @todo Implement these for key actions too:
+ALIASES = {
+    "KEYCODE": {
+        "WIN": "WINDOWS", 
+        "CTRL": "CONTROL",
+        "PG_DN": "PAGE_DOWN",
+        "PG_UP": "PAGE_UP"
+    },
+    "CONSUMER_CONTROL": {
+        "VOL_DOWN": "VOLUME_DECREMENT",
+        "VOLUME_DOWN": "VOLUME_DECREMENT",
+        "VOL_DN": "VOLUME_DECREMENT",
+        "VOL_UP": "VOLUME_DECREMENT",
+        "VOLUME_UP": "VOLUME_DECREMENT",
+        "FORWARD": "FAST_FORWARD",
+        "FWD": "FAST_FORWARD",
+        "NEXT": "SCAN_NEXT_TRACK",
+        "PREV": "SCAN_PREVIOUS_TRACK",
+        "PAUSE": "PLAY_PAUSE",
+        "PLAY": "PLAY_PAUSE",
+        "SCREEN_UP": "BRIGHTNESS_INCREMENT",
+        "SCREEN_DN": "BRIGHTNESS_INCREMENT",
+        "SCREEN_DOWN": "BRIGHTNESS_INCREMENT",
+        "BRIGHTER": "BRIGHTNESS_INCREMENT",
+        "DIMMER": "BRIGHTNESS_INCREMENT",
+        "LT_UP": "BRIGHTNESS_DECREMENT",
+        "LT_DN": "BRIGHTNESS_DECREMENT"
+    }
+}
+
 
 # Set up abbreviations for different devices
 kbd = Keyboard(usb_hid.devices)
 us_layout = KeyboardLayoutUS(kbd)
 m = Mouse(usb_hid.devices)
 # alternatively: macropad.consumer_control.send
-mouse_delta = {"x": 0, "y": 0}
 
+def mouse_move(x_delta, y_delta):
+    speed = SETTINGS["mouse_speed"]    
+    MOUSE_DELTA["x"] = MOUSE_DELTA["x"] + x_delta * speed,
+    MOUSE_DELTA["y"] = MOUSE_DELTA["y"] + y_delta * speed
+
+
+def close_out():    
+    # Called at the end of the main loop
+    if MOUSE_DELTA["x"] != 0 or MOUSE_DELTA["y"] != 0:
+        m.move(x=MOUSE_DELTA["x"], y=MOUSE_DELTA["y"])
+        MOUSE_DELTA["x"] = 0
+        MOUSE_DELTA["y"] = 0
+    # print("\n----------\n")
+
+def sub_in_alias(string, alias_type):
+    string = string.upper()
+    if string in ALIASES[alias_type]:
+        return ALIASES[alias_type][string.upper()]
+    else:
+        return string
+
+def c_control(control_type):
+    control_type = sub_in_alias(control_type, "CONSUMER_CONTROL")
+    ConsumerControl(usb_hid.devices).send(getattr(ConsumerControlCode, control_type))
 
 def get_keycode(string):
     return getattr(Keycode, string.upper())
 
 def macro(string):
-    # print("All:", list(dir(Keycode)))
-    aliases = {"WIN": "WINDOWS", "CTRL": "CONTROL"}
-
     def alias(string):
-        if string.upper() in aliases:
-            return aliases[string.upper()]
-        else:
-            return string
+        return sub_in_alias(string, "KEYCODE")
 
     def check_code(string):
         return hasattr(Keycode, string.upper())
@@ -52,62 +112,40 @@ def macro(string):
             us_layout.write(segment)
 
 
-def mouse_move(x, y):
-    global mouse_delta
-    speed = mouse_speed
-    mouse_delta["x"] = mouse_delta["x"] + x * speed
-    mouse_delta["y"] = mouse_delta["y"] + y * speed
 
-
-def close_out():
-    # Called at the end of the main loop
-    global mouse_delta
-    if mouse_delta["x"] != 0 or mouse_delta["y"] != 0:
-        m.move(x=mouse_delta["x"], y=mouse_delta["y"])
-        mouse_delta = {"x": 0, "y": 0}
-    # print("\n----------\n")
 
 
 # Layer Actions
 def current_layer_name():
-    return layer_names[current_layer]
+    return layer_names[SETTINGS["current_layer"]]
 
 
 # @todo check that these work and wrap properly:
 def layer_up():
-    global current_layer
-    current_layer = (current_layer + 1) % len(layer_names)
+    SETTINGS["current_layer"] = (SETTINGS["current_layer"] + 1) % len(layer_names)
     layer(current_layer_name())
 
 
 def layer_down():
-    global current_layer
-    current_layer = (current_layer - 1) % len(layer_names)
+    SETTINGS["current_layer"] = (SETTINGS["current_layer"] - 1) % len(layer_names)
     layer(current_layer_name())
 
 
 def layer_select(move=0):
-    global selected_layer
     if move == 0:
-        layer(layer_names[selected_layer])
+        layer(layer_names[SETTINGS["selected_layer"]])
     else:
-        selected_layer = (selected_layer + move) % len(layer_names)
-        print("\n\nTap for\n{}\n".format(layer_names[selected_layer]))
+        SETTINGS["selected_layer"] = (SETTINGS["selected_layer"] + move) % len(layer_names)
+        print("\n\nTap for\n{}\n".format(layer_names[SETTINGS["selected_layer"]]))
 
 
-def layer(layer_name, inputs=0, time=sleep_time, entering=True):
+def layer(layer_name):  # , inputs=0, time=sleep_time, entering=True):
     # @todo implement N inputs to leave the layer
     # @todo implement sleep/time to exit layer by timeout
     # @todo implement exit layer to parent
-    global current_layer
-    global selected_layer
-    current_layer = layer_names.index(layer_name)
-    selected_layer = current_layer
+    SETTINGS["current_layer"] = layer_names.index(layer_name)
+    SETTINGS["selected_layer"] = SETTINGS["current_layer"]
     print("\nCurrent Layer:\n", current_layer_name())
-
-def cc(control_type):
-    cc = ConsumerControl(usb_hid.devices)
-    cc.send(getattr(ConsumerControlCode, control_type))
 
 
 
@@ -131,22 +169,6 @@ kbd.press(Keycode.TWO)
 # Release all keys.
 kbd.release_all()
 
-"ConsumerControlCode": [
-  'RECORD',
-  'FAST_FORWARD',
-  'REWIND',
-  'SCAN_NEXT_TRACK',
-  'SCAN_PREVIOUS_TRACK',
-  'STOP',
-  'EJECT',
-  'PLAY_PAUSE',
-  'MUTE',
-  'VOLUME_DECREMENT',
-  'VOLUME_INCREMENT',
-  'BRIGHTNESS_DECREMENT',
-  'BRIGHTNESS_INCREMENT'
-],
-
 """
 key_actions = {
     "blank": {"action": (print, "Key Unassigned"), "hint": "Unassigned key action"},
@@ -160,11 +182,11 @@ key_actions = {
     "ls_dn": {"action": (layer_select, -1), "hint": "Scroll down one layout layer"},
     "ls_go": {"action": layer_select, "hint": "Move to the selected layout layer"},
     "vol_up": {
-        "action": (cc, "VOLUME_INCREMENT"),
+        "action": (c_control, "VOLUME_INCREMENT"),
         "hint": "Turn up the sound volume",
     },
     "vol_dn": {
-        "action": (cc, "VOLUME_DECREMENT"),
+        "action": (c_control, "VOLUME_DECREMENT"),
         "hint": "Turn down the sound volume",
     },
     "rt_click": {
@@ -188,19 +210,19 @@ key_actions = {
         "hint": "Toggle off mouse drag (release left button)",
     },
     "m_rt": {
-        "action": [(mouse_move, (mouse_scoot, 0)), 0, (mouse_move, (1, 0))],
+        "action": [(mouse_move, (SETTINGS["mouse_scoot"], 0)), 0, (mouse_move, (1, 0))],
         "hint": "Move the mouse right",
     },
     "m_lf": {
-        "action": [(mouse_move, (-mouse_scoot, 0)), 0, (mouse_move, (-1, 0))],
+        "action": [(mouse_move, (-SETTINGS["mouse_scoot"], 0)), 0, (mouse_move, (-1, 0))],
         "hint": "Move the mouse left",
     },
     "m_up": {
-        "action": [(mouse_move, (0, -mouse_scoot)), 0, (mouse_move, (0, -1))],
+        "action": [(mouse_move, (0, -SETTINGS["mouse_scoot"])), 0, (mouse_move, (0, -1))],
         "hint": "Move the mouse up",
     },
     "m_dn": {
-        "action": [(mouse_move, (0, mouse_scoot)), 0, (mouse_move, (0, 1))],
+        "action": [(mouse_move, (0, SETTINGS["mouse_scoot"])), 0, (mouse_move, (0, 1))],
         "hint": "Move the mouse down",
     },
     "m_w": {
@@ -219,6 +241,14 @@ key_actions = {
         "action": [(kbd.press, Keycode.D), (kbd.release, Keycode.D)],
         "hint": "Gamepad style D",
     },
+    "m_space": {
+        "action": [(kbd.press, Keycode.SPACE), (kbd.release, Keycode.SPACE)],
+        "hint": "Gamepad style space",
+    },
+    "m_shift": {
+        "action": [(kbd.press, Keycode.LEFT_SHIFT), (kbd.release, Keycode.LEFT_SHIFT)],
+        "hint": "Gamepad style left shift",
+    }
 }
 
 
@@ -246,12 +276,12 @@ def add_layer_switch_actions():
         # @todo check that there's not an action collision
         if name in key_actions:
             raise Exception(
-                "Layer name collision:\n{} is already a key action".format(name)
+                f"Layer name collision:\n{name} is already a key action"
             )
         else:
             key_actions[name] = {
                 "action": (layer, name),
-                "hint": "Switch to {} layer".format(name),
+                "hint": f"Switch to {name} layer",
             }
 
 add_layer_switch_actions()
@@ -260,19 +290,21 @@ add_layer_switch_actions()
 def print_key_actions_list():
     # @todo sort by length = 0 and then alphabetically?
     print("Key actions:\n", ", ".join(key_actions.keys()))
+    
+    '''
+    Last Export:
+    x, m_w, f20, f21, m_s, escape, f22, zero, f23, nine, end, f24, left_control, pound, backslash, blank, ls_dn, m_stop, f1, m_d, l_up, f2, m_a, semicolon, f3, five, f4, f5, f6, md_click, m_lf, m_dn, ls_up, space, f7, f8, f9, insert, tab, m_drag, z, two, E, D, G, lf_click, Z, F, A, C, rt_click, m_up, right_bracket, B, M, L, O, N, I, H, l_dn, ls_go, J, K, T, m_space, Q, P, S, R, U, V, W, minus, Y, X, page_up, page_down, keypad_forward_slash, keypad_asterisk, caps_lock, spacebar, down_arrow, keypad_plus, keypad_enter, keypad_two, keypad_three, m_shift, keypad_six, keypad_seven, keypad_eight, keypad_period, keypad_backslash, power, keypad_equals, application, f12, f13, f10, f11, f16, vol_dn, f14, f15, f17, control, backspace, home, three, enter, f18, f19, left_shift, left_alt, modifier_bit, alt, keypad_minus, option, keypad_four, left_gui, left_arrow, gui, windows, command, right_control, right_alt, right_gui, Mouse, Game, one, Layer Select, grave_accent, right_arrow, keypad_five, up_arrow, print_screen, shift, Default, vol_up, Minecraft, return, drive_f, keypad_nine, Cassette Beasts, keypad_zero, scroll_lock, delete, period, forward_slash, keypad_numlock, six, four, eight, right_shift, keypad_one, quote, e, d, g, f, a, c, b, comma, left_bracket, m, l, o, n, i, h, k, j, u, m_rt, w, v, q, pause, p, s, equals, r, t, seven, y
+    '''
+    
 
 
 def valid_action(action_name):
     if not isinstance(action_name, str):
-        raise Exception("This action name is not a string: '{}'".format(action_name))
+        raise Exception(f"This action name is not a string: '{action_name}'")
     elif action_name not in key_actions:
-        raise Exception(
-            "There is no action assigned to this name: '{}'".format(action_name)
-        )
+        raise Exception(f"There is no action assigned to this name: '{action_name}'")
     elif "action" not in key_actions[action_name]:
-        raise Exception(
-            "There is no function assigned to action '{}'".format(action_name)
-        )
+        raise Exception(f"There is no function assigned to action '{action_name}'")
     return True
 
 
@@ -288,14 +320,14 @@ def valid_index(action, index):
 
 
 def track_hold(action_name, index):
-    global hold_duration
+    global HOLD_DURATION  # pylint: disable=global-variable-not-assigned
     if index == 1:
-        hold_duration[action_name] = 0
+        HOLD_DURATION[action_name] = 0
     elif index == 2:
-        if action_name in hold_duration:
-            hold_duration[action_name] = hold_duration[action_name] + 1
+        if action_name in HOLD_DURATION:
+            HOLD_DURATION[action_name] = HOLD_DURATION[action_name] + 1
         else:
-            hold_duration[action_name] = 1
+            HOLD_DURATION[action_name] = 1
 
 
 def do_key_action(action_name, index=0):
@@ -318,8 +350,8 @@ def do_key_action(action_name, index=0):
         return
 
     track_hold(action_name, index)
-
-    if type(action) == type(do_key_action):
+    # @here
+    if callable(action):
         # print("Executing basic function")
         action()
     elif len(action) > 1:

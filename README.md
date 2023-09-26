@@ -1,7 +1,14 @@
 # Macropad
 CircuitPython for [Adafruit MacroPad RP2040](https://www.adafruit.com/product/5128)
 
+## Design Concepts
+tamtam in the keyboard is a pet we take care of when we take care of ourselves/a nudge to be more routine about self care, so it needs breaks from taking input and to be fed and watered and get enough sleep, and it'll cheerfully turn down the lights or refuse to take input if it needs a break
+  - takes breaks only after sensible inputs (ESC, CTRL+S) when there's been ~25 minutes of activity recently
+  - squeaks indignantly if you keep trying to use it during a break
+
 ## References
+- https://learn.adafruit.com/circuitpython-display-support-using-displayio/sprite-sheet
+- https://learn.adafruit.com/cooperative-multitasking-in-circuitpython-with-asyncio
 - https://learn.adafruit.com/macropad-hotkeys/custom-configurations
 - https://learn.adafruit.com/adafruit-macropad-rp2040/macropad-keyboard-and-mouse
 - https://docs.circuitpython.org/projects/macropad/en/latest/api.html
@@ -15,7 +22,15 @@ CircuitPython for [Adafruit MacroPad RP2040](https://www.adafruit.com/product/51
 - https://github.com/Tecate/bitmap-fonts
 - https://github.com/benwr/glean
 - https://github.com/cmvnd/fonts
+- https://www.cl.cam.ac.uk/~mgk25/ucs-fonts.html
+    - so far leads in support of most Unicode chars
+- https://unifoundry.com/unifont/unifont-utilities.html
+
+- Monospace
+    - https://people.mpi-inf.mpg.de/~uwe/misc/uw-ttyp0/
+        - nine sizes from 6x11 to 11x22 + bold versions; for some there is also a (somewhat experimental) italic
 - see also https://learn.adafruit.com/custom-fonts-for-pyportal-circuitpython-display
+
 
 ### Useful Software
 - https://github.com/rhinterndorfer/MousePointerReposition
