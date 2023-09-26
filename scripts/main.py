@@ -29,7 +29,7 @@ INIT_ACTION = "Cassette Beasts"
 SLEEP_AT = 100000
 DEBUG = True
 
-log("TEST LOG")
+log("ARE WE BACK?! WE'RE BACK!")
 
 # Initialize and rotate the MacroPad so that the OLED is on the left
 macropad = MacroPad(90)

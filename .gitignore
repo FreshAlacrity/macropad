@@ -8,8 +8,12 @@ __pycache__/
 
 # Distribution / packaging
 .Python
+lib/
+requirements/
+macros/
 fonts/
 build/
+examples/
 develop-eggs/
 dist/
 downloads/
@@ -152,3 +156,4 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 test.py
+backup.pyw.lnk

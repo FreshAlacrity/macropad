@@ -4,10 +4,12 @@ CircuitPython for [Adafruit MacroPad RP2040](https://www.adafruit.com/product/51
 ## Design Concepts
 tamtam in the keyboard is a pet we take care of when we take care of ourselves/a nudge to be more routine about self care, so it needs breaks from taking input and to be fed and watered and get enough sleep, and it'll cheerfully turn down the lights or refuse to take input if it needs a break
   - takes breaks only after sensible inputs (ESC, CTRL+S) when there's been ~25 minutes of activity recently
+    - snooze function for wrapping up tasks
   - squeaks indignantly if you keep trying to use it during a break
 
 ## References
 - https://learn.adafruit.com/circuitpython-display-support-using-displayio/sprite-sheet
+- https://learn.adafruit.com/circuitpython-display-support-using-displayio/ui-quickstart#groups-3033357
 - https://learn.adafruit.com/cooperative-multitasking-in-circuitpython-with-asyncio
 - https://learn.adafruit.com/macropad-hotkeys/custom-configurations
 - https://learn.adafruit.com/adafruit-macropad-rp2040/macropad-keyboard-and-mouse
@@ -39,6 +41,7 @@ tamtam in the keyboard is a pet we take care of when we take care of ourselves/a
 If pylance isn't recognizing imports from files, try Reload Window command
 
 ## To Do
+- [ ] learn more about displayio groups
 - [ ] clean up multi-line comment examples
 - [ ] have the backup and commit shortcut also close the explorer window
 - [x] get the screen rotated 90 degrees

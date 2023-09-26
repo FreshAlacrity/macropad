@@ -1,13 +1,13 @@
 """Update CircuitPython and GitHub repo and open
 the GitHub Desktop application for quick commits."""
 
-# Later: also check which version of the readme is most recent and copy to the other location
+# Later: find and duplicate all .py files in the main directory, not just listed ones
 
 import os
 import shutil
 from AppOpener import open as open_application
 
-file_names = ["main.py", "layers.py", "layermap.py", "mappings.py", "timer.py", "tamtam.py"]
+file_names = ["main.py", "layers.py", "layermap.py", "mappings.py", "timer.py", "tamtam.py", "logs.py"]
 
 def copy_files(source, destination, names):
     """Copies files from one path location to another"""
