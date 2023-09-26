@@ -25,7 +25,7 @@ from tamtam import tam_tam
 from logs import log
 
 # Settings
-INIT_ACTION = "Cassette Beasts"
+INIT_ACTION = "Mouse"
 SLEEP_AT = 100000
 DEBUG = True
 
@@ -66,13 +66,14 @@ def unsleep():
 
 
 def update():
-    if SETTINGS["idle_time"] == 0:
+    if get_idle_time() == 0:
         close_out()
         color = get_layer_color(current_layer_name())
         pattern = get_layer_pattern(current_layer_name())
         for i in pattern:
             macropad.pixels[i] = color
-    elif get_idle_time() % 100 == 0:
+        update_display()
+    elif get_idle_time() % 500 == 0:
         # Only updates the display every N frames
         update_display()
 
@@ -81,7 +82,6 @@ def init():
     print("\n\n\n\n\nBooting...\n")
     do_key_action(INIT_ACTION)
     update()
-    update_display()
 
     # Loop forever so you can enjoy your image
     #while True:

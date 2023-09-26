@@ -8,6 +8,7 @@ tamtam in the keyboard is a pet we take care of when we take care of ourselves/a
   - squeaks indignantly if you keep trying to use it during a break
 
 ## References
+- https://docs.circuitpython.org/en/latest/shared-bindings/watchdog/index.html
 - https://learn.adafruit.com/circuitpython-display-support-using-displayio/sprite-sheet
 - https://learn.adafruit.com/circuitpython-display-support-using-displayio/ui-quickstart#groups-3033357
 - https://learn.adafruit.com/cooperative-multitasking-in-circuitpython-with-asyncio
