@@ -20,8 +20,7 @@ from layers import get_layer_pattern
 from mappings import do_key_action
 from mappings import current_layer_name
 from mappings import close_out
-from tamtam import update_display
-from tamtam import tam_tam
+from display import update_display
 from logs import log
 
 # Settings
@@ -56,7 +55,6 @@ def get_idle_time():
 
 def sleep():
     # @todo figure out why I can't import tam_tam
-    tam_tam("asleep")
     for i in range(12):
         macropad.pixels[i] = (0, 0, 0)
 
@@ -73,7 +71,7 @@ def update():
         for i in pattern:
             macropad.pixels[i] = color
         update_display()
-    elif get_idle_time() % 500 == 0:
+    elif get_idle_time() % 500 == 0:  # @todo go back to 500 after @debug
         # Only updates the display every N frames
         update_display()
 

@@ -7,7 +7,7 @@ import os
 import shutil
 from AppOpener import open as open_application
 
-file_names = ["main.py", "layers.py", "layermap.py", "mappings.py", "timer.py", "tamtam.py", "logs.py"]
+file_names = ["main.py", "layers.py", "layermap.py", "mappings.py", "timer.py", "display.py", "logs.py", "tamtam.py"]
 
 def copy_files(source, destination, names):
     """Copies files from one path location to another"""

@@ -19,6 +19,7 @@ tamtam in the keyboard is a pet we take care of when we take care of ourselves/a
 - https://docs.circuitpython.org/projects/hid/en/latest/examples.html#simple-gamepad
 - [All supported keycodes](https://usb.org/sites/default/files/hut1_21_0.pdf#page=83)
   - note that keycodes are the names for key *positions* on a US keyboard
+- [Guide for setting up external displays](https://learn.adafruit.com/circuitpython-display-support-using-displayio/display-and-display-bus)
 
 ### Possible Fonts
 - https://terminus-font.sourceforge.net/
@@ -28,7 +29,6 @@ tamtam in the keyboard is a pet we take care of when we take care of ourselves/a
 - https://www.cl.cam.ac.uk/~mgk25/ucs-fonts.html
     - so far leads in support of most Unicode chars
 - https://unifoundry.com/unifont/unifont-utilities.html
-
 - Monospace
     - https://people.mpi-inf.mpg.de/~uwe/misc/uw-ttyp0/
         - nine sizes from 6x11 to 11x22 + bold versions; for some there is also a (somewhat experimental) italic
@@ -42,7 +42,12 @@ tamtam in the keyboard is a pet we take care of when we take care of ourselves/a
 If pylance isn't recognizing imports from files, try Reload Window command
 
 ## To Do
-- [ ] learn more about displayio groups
+- [ ] make sprite sheets for:
+    - layer names
+    - tam tam faces
+- [ ] get a progress bar working for pomodoro timers
+- [ ] figure out graphics memory error
+    - [ ] learn more about displayio groups
 - [ ] clean up multi-line comment examples
 - [ ] have the backup and commit shortcut also close the explorer window
 - [x] get the screen rotated 90 degrees
