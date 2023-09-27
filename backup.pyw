@@ -7,7 +7,7 @@ import os
 import shutil
 from AppOpener import open as open_application
 
-file_names = ["main.py", "layers.py", "layermap.py", "mappings.py", "timer.py", "display.py", "logs.py", "tamtam.py"]
+file_names = ["main.py", "layers.py", "layermap.py", "mappings.py", "display.py", "logs.py", "tamtam.py", "text.py", "timetest.py"]
 
 def copy_files(source, destination, names):
     """Copies files from one path location to another"""
@@ -20,10 +20,14 @@ def sync_file(paths):
     edited_date = list(map(os.path.getmtime, paths))
     most_recent = edited_date.index(max(edited_date))
     copy_from = paths[most_recent]
+    
+    # Filter out copies (files that are already identical to the most recent)
+    paths = filter(lambda a : os.path.getmtime(a) != max(edited_date), paths)
+    
+    # Update the files
     for path in paths:
-        if path != copy_from:
-            print(f"Copying from {copy_from} to {path}")
-            shutil.copyfile(copy_from, path)
+        print(f"Copying from {copy_from} to {path}")
+        shutil.copyfile(copy_from, path)
 
 copy_files("F:/", "./scripts/", file_names)
 sync_file(["F:/README.md", "./README.md"])
