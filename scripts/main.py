@@ -37,7 +37,10 @@ macropad = MacroPad(90)
 # Initial values
 SETTINGS = {
     "idle_time": 0,
-    "encoder_position": 0
+    "encoder_position": 0,
+    
+    # Smaller numbers are faster (in loops not real time)
+    "FRAME_RATE": 1
 }
 keys_held = []
 
@@ -64,6 +67,7 @@ def unsleep():
 
 
 def update():
+    frame_rate = SETTINGS["FRAME_RATE"]
     if get_idle_time() == 0:
         close_out()
         color = get_layer_color(current_layer_name())
@@ -71,7 +75,7 @@ def update():
         for i in pattern:
             macropad.pixels[i] = color
         update_display()
-    elif get_idle_time() % 500 == 0:  # @todo go back to 500 after @debug
+    elif get_idle_time() % frame_rate == 0:
         # Only updates the display every N frames
         update_display()
 

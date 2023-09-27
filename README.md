@@ -17,6 +17,7 @@ tamtam in the keyboard is a pet we take care of when we take care of ourselves/a
 - https://docs.circuitpython.org/projects/macropad/en/latest/api.html
 - https://docs.circuitpython.org/projects/hid/en/latest/
 - https://docs.circuitpython.org/projects/hid/en/latest/examples.html#simple-gamepad
+- https://docs.circuitpython.org/projects/display-shapes/en/latest/api.html#adafruit_display_shapes.rect.Rect
 - [All supported keycodes](https://usb.org/sites/default/files/hut1_21_0.pdf#page=83)
   - note that keycodes are the names for key *positions* on a US keyboard
 - [Guide for setting up external displays](https://learn.adafruit.com/circuitpython-display-support-using-displayio/display-and-display-bus)
@@ -42,6 +43,7 @@ tamtam in the keyboard is a pet we take care of when we take care of ourselves/a
 If pylance isn't recognizing imports from files, try Reload Window command
 
 ## To Do
+- [ ] figure out why the framerate is irregular
 - [ ] make sprite sheets for:
     - layer names
     - tam tam faces
