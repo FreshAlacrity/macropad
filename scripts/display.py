@@ -16,8 +16,6 @@ from tamtam import current_face_string
 from tamtam import current_face_sprite
 from mappings import current_layer_name
 from text import new_layer_bitmap
-from timetest import new_test
-from timetest import test_end
 
 
 SETTINGS = {
@@ -33,8 +31,6 @@ STORAGE = {
 
 
 def init():
-    time_test = new_test(f"Display init")
-
     # Display setup
     SETTINGS["OLED_DISPLAY"].auto_refresh = False
     SETTINGS["OLED_DISPLAY"].brightness = SETTINGS["brightness"]
@@ -49,7 +45,14 @@ def init():
 
     # Create a bitmap (sprite sheet) with two colors
     SETTINGS["MAIN_BITMAP"] = create_main_bitmap()
-
+    
+    # Set which local functions are used to
+    # check values and construct objects
+    STORAGE["GETTER"]["TAM_TAM"] = current_tam_tam_frame
+    STORAGE["MAKER"]["TAM_TAM"] = tam_tam
+    STORAGE["MAKER"]["BAR"] = progress_bar
+    STORAGE["GETTER"]["BAR"] = current_progress
+    
     # Create a TileGrid using the Bitmap and Palette
     SETTINGS["TILE_GRID"] = displayio.TileGrid(
         SETTINGS["MAIN_BITMAP"], pixel_shader=SETTINGS["PALETTE"]
@@ -69,8 +72,6 @@ def init():
         )
     )
 
-    test_end(time_test)
-
 
 def elapsed_time():
     return time.monotonic() - SETTINGS["START_TIME"]
@@ -80,7 +81,6 @@ def current_tam_tam_frame():
     return current_face_string(elapsed_time())
 
 
-STORAGE["GETTER"]["TAM_TAM"] = current_tam_tam_frame
 
 
 def current_progress():
@@ -90,24 +90,15 @@ def current_progress():
     return (frames_elapsed % frames) + 1
 
 
-STORAGE["GETTER"]["BAR"] = current_progress
-
-
 def progress_bar(frame):
     """Adds a tamtam face to the current display group"""
     y_height = SETTINGS["PROGRESS_BAR_HEIGHT"]
     return Rect(1, y_height, frame, 10, fill=0xFFFFFF)
 
 
-STORAGE["MAKER"]["BAR"] = progress_bar
-
-
 def tam_tam(current_face):
     """Returns a bitmap tamtam face in the appropriate position"""
     return current_face_sprite(current_face, 15)
-
-
-STORAGE["MAKER"]["TAM_TAM"] = tam_tam
 
 
 def create_main_bitmap():

@@ -20,6 +20,7 @@ from layers import get_layer_pattern
 from mappings import do_key_action
 from mappings import current_layer_name
 from mappings import close_out
+from timetest import time_test
 from display import update_display
 from logs import log
 
@@ -44,6 +45,7 @@ keys_held = []
 
 
 # @todo get this working so it restores the USB connection
+@time_test("File write attempt")
 def file_write_attempt():
     try:
         modes = {

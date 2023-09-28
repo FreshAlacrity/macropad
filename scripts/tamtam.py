@@ -7,8 +7,7 @@ import displayio
 from adafruit_display_text import label
 from adafruit_bitmap_font import bitmap_font
 from adafruit_bitmapsaver import save_pixels
-from timetest import new_test
-from timetest import test_end
+from timetest import time_test
 
 SETTINGS = {
     "FONT_DIR": "fonts/",
@@ -71,17 +70,14 @@ def font_setup():
 font_setup()
 
 
+@time_test("Make string bitmap")
 def make_string_bitmap(string, sx=0, sy=0):
     font = bitmap_font.load_font(f"{SETTINGS['FONT_DIR']}{SETTINGS['FONT_FILE']}")
 
     char_height = SETTINGS["CHAR_HEIGHT"]
 
-    time_test = new_test(f"String bitmap of '{string}'")
-
     # Create the text label
     text_area = label.Label(font, text=string, color=0xFFFFFF)
-
-    test_end(time_test)
 
     # Set the location
     text_area.x = sx
@@ -102,8 +98,8 @@ def current_face_sprite(face_string, sy):
     # @todo test the time this takes against a spritesheet
     return centered_text(face_string, sy)
 
+@time_test("Make sprite sheet")
 def make_sprite_sheet():
-    time_test = new_test(f"Spritesheet creation")
     
     # @later try also saving the 1/0 bitmaps to more condensed formats?
     width = 100
@@ -126,7 +122,6 @@ def make_sprite_sheet():
     except Exception as _:
         pass
         
-    test_end(time_test)
 make_sprite_sheet()
 
 def current_face_string(elapsed_time):

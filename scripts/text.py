@@ -5,8 +5,7 @@
 import board
 import terminalio
 from adafruit_display_text import label
-from timetest import new_test
-from timetest import test_end
+from timetest import time_test
 
 
 DISPLAY_SETTINGS = {
@@ -17,17 +16,15 @@ DISPLAY_SETTINGS = {
     "CHAR_HEIGHT": 12 
 }
 
+@time_test("String bitmap")
 def make_string_bitmap(string, sx=0, sy=0):
     font = DISPLAY_SETTINGS["FONT"]
     
     char_height = DISPLAY_SETTINGS["CHAR_HEIGHT"]
     
-    time_test = new_test(f"String bitmap of '{string}'")
     
     # Create the text label
     text_area = label.Label(font, text=string, color=0xFFFFFF)
-
-    test_end(time_test)
     
     # Set the location
     text_area.x = sx
