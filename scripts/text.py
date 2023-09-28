@@ -5,9 +5,9 @@
 import board
 import terminalio
 from adafruit_display_text import label
-from adafruit_bitmap_font import bitmap_font
 from timetest import new_test
 from timetest import test_end
+
 
 DISPLAY_SETTINGS = {
     "FONT": terminalio.FONT,

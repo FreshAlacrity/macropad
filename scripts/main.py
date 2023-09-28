@@ -7,7 +7,7 @@
 
 # Since imports that work great in execution aren't being recognized:
 # pyright: reportMissingImports=false
-# pylint: disable=import-error
+# pylint: disable=import-error, c-extension-no-member
 
 # Disabled for quick prototyping:
 # pylint: disable=broad-exception-raised
@@ -28,8 +28,6 @@ INIT_ACTION = "Mouse"
 SLEEP_AT = 100000
 DEBUG = True
 
-log("ARE WE BACK?! WE'RE BACK!")
-
 # Initialize and rotate the MacroPad so that the OLED is on the left
 macropad = MacroPad(90)
 
@@ -45,6 +43,30 @@ SETTINGS = {
 keys_held = []
 
 
+# @todo get this working so it restores the USB connection
+def file_write_attempt():
+    try:
+        modes = {
+            "Read": "r",  # Errors if it doesn't exist
+            "Append": "a",
+            "Write": "w",  # Creates if it doesn't exist
+            "Create": "x"  # Errors if it *does* exist
+        }
+        
+        with open("/settings.toml", mode=modes["Append"], encoding="utf-8") as fp:
+            while True:
+                fp.write("HELLO WORLD! ")
+                fp.flush()
+    except OSError as _:
+        # Typical error when the filesystem isn't writeable
+        print("No files were written because the drive is in USB mode; reset with the button to change back (or uncomment out the drive-disabling code in boot.py)")
+
+file_write_attempt()
+
+
+log("ARE WE BACK?! WE'RE BACK!")
+
+        
 def input_action(current_key_num, index=0):
     """Retrieves and executes the action assigned to this key number on the current layer."""
     action = get_action(current_key_num, current_layer_name())

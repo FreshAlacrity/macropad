@@ -9,13 +9,15 @@ import time
 import board
 import displayio
 from adafruit_display_shapes.rect import Rect
+
 # from adafruit_display_shapes.circle import Circle
 # from adafruit_display_shapes.triangle import Triangle
 from tamtam import current_face_string
 from tamtam import current_face_sprite
 from mappings import current_layer_name
 from text import new_layer_bitmap
-from text import centered_text
+from timetest import new_test
+from timetest import test_end
 
 
 SETTINGS = {
@@ -25,84 +27,93 @@ SETTINGS = {
     "brightness": 0.5,
 }
 STORAGE = {
-    "GETTER": {
-            "LAYER": current_layer_name
-        },
-    "MAKER": {
-            "LAYER": new_layer_bitmap
-        }
+    "GETTER": {"LAYER": current_layer_name},
+    "MAKER": {"LAYER": new_layer_bitmap},
 }
 
+
 def init():
-    display_init_start_time = time.monotonic()
-    
+    time_test = new_test(f"Display init")
+
     # Display setup
     SETTINGS["OLED_DISPLAY"].auto_refresh = False
     SETTINGS["OLED_DISPLAY"].brightness = SETTINGS["brightness"]
     SETTINGS["OLED_DISPLAY"].root_group = displayio.Group()
     frame = SETTINGS["OLED_DISPLAY"].root_group
-        
+
     # Assign default palette colors
     palette = displayio.Palette(2)
     palette[0] = 0x000000
     palette[1] = 0xFFFFFF
     SETTINGS["PALETTE"] = palette
-    
-     # Create a bitmap (sprite sheet) with two colors
+
+    # Create a bitmap (sprite sheet) with two colors
     SETTINGS["MAIN_BITMAP"] = create_main_bitmap()
-    
+
     # Create a TileGrid using the Bitmap and Palette
     SETTINGS["TILE_GRID"] = displayio.TileGrid(
-            SETTINGS["MAIN_BITMAP"],
-            pixel_shader=SETTINGS["PALETTE"]
-        )
+        SETTINGS["MAIN_BITMAP"], pixel_shader=SETTINGS["PALETTE"]
+    )
 
     # Add the main tile grid and tamtam frame
     frame.append(SETTINGS["TILE_GRID"])
-    
-    frame.append(Rect(
-        0, 
-        SETTINGS["PROGRESS_BAR_HEIGHT"], 
-        SETTINGS["OLED_DISPLAY"].width, 
-        10, 
-        fill="None", 
-        outline=0xFFFFFF
-        ))
-    
-    print("Display init execution time:", 
-          time.monotonic() - display_init_start_time)
+
+    frame.append(
+        Rect(
+            0,
+            SETTINGS["PROGRESS_BAR_HEIGHT"],
+            SETTINGS["OLED_DISPLAY"].width,
+            10,
+            fill="None",
+            outline=0xFFFFFF,
+        )
+    )
+
+    test_end(time_test)
+
 
 def elapsed_time():
     return time.monotonic() - SETTINGS["START_TIME"]
 
+
 def current_tam_tam_frame():
     return current_face_string(elapsed_time())
+
+
 STORAGE["GETTER"]["TAM_TAM"] = current_tam_tam_frame
+
 
 def current_progress():
     delay = 200
     frames = SETTINGS["OLED_DISPLAY"].width - 2
     frames_elapsed = int(elapsed_time() * delay / (frames - 1))
     return (frames_elapsed % frames) + 1
+
+
 STORAGE["GETTER"]["BAR"] = current_progress
+
 
 def progress_bar(frame):
     """Adds a tamtam face to the current display group"""
     y_height = SETTINGS["PROGRESS_BAR_HEIGHT"]
     return Rect(1, y_height, frame, 10, fill=0xFFFFFF)
+
+
 STORAGE["MAKER"]["BAR"] = progress_bar
+
 
 def tam_tam(current_face):
     """Returns a bitmap tamtam face in the appropriate position"""
     return current_face_sprite(current_face, 15)
+
+
 STORAGE["MAKER"]["TAM_TAM"] = tam_tam
+
 
 def create_main_bitmap():
     return displayio.Bitmap(
-            SETTINGS["OLED_DISPLAY"].width,
-            SETTINGS["OLED_DISPLAY"].height,
-            2
-        )
+        SETTINGS["OLED_DISPLAY"].width, SETTINGS["OLED_DISPLAY"].height, 2
+    )
 
 
 def get_group(value_type, value):
@@ -124,7 +135,7 @@ def get_group(value_type, value):
 def check_and_update(value_type):
     current_value = STORAGE["GETTER"][value_type]()
     frame = SETTINGS["OLED_DISPLAY"].root_group
-    
+
     stored = value_type in SETTINGS
     changed = not stored or SETTINGS[value_type] != current_value
 
@@ -137,17 +148,18 @@ def check_and_update(value_type):
 
 def update_display():
     # Save a time value to track execution time
-    
+
     # @todo check that getters and makers have the same keys
     # @todo use that list of keys here
     for e in ["LAYER", "BAR", "TAM_TAM"]:
         check_and_update(e)
-    
+
     # Updates the display to show the frame group
     SETTINGS["OLED_DISPLAY"].refresh()
-    
+
     # Never shows up on the display,
     # regardless of if it's before or after refresh:
     # print("HELLO WORLD")
+
 
 init()
