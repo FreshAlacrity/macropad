@@ -10,6 +10,7 @@ import board
 import displayio
 from adafruit_display_shapes.rect import Rect
 
+
 # from adafruit_display_shapes.circle import Circle
 # from adafruit_display_shapes.triangle import Triangle
 from tamtam import current_face_string
@@ -123,6 +124,7 @@ def get_group(value_type, value):
         return new_group
 
 
+
 def check_and_update(value_type):
     current_value = STORAGE["GETTER"][value_type]()
     frame = SETTINGS["OLED_DISPLAY"].root_group
@@ -147,10 +149,6 @@ def update_display():
 
     # Updates the display to show the frame group
     SETTINGS["OLED_DISPLAY"].refresh()
-
-    # Never shows up on the display,
-    # regardless of if it's before or after refresh:
-    # print("HELLO WORLD")
 
 
 init()

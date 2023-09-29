@@ -3,7 +3,7 @@
 # pylint: disable=import-error, c-extension-no-member, no-name-in-module
 
 
-# pylint: disable=no-value-for-parameter
+# pylint: disable=no-value-for-parameter, broad-exception-raised
 
 from board import DISPLAY
 from displayio import Bitmap as new_bitmap
@@ -14,6 +14,8 @@ from adafruit_display_text import bitmap_label
 from adafruit_bitmap_font import bitmap_font
 from adafruit_bitmapsaver import save_pixels
 from timetest import time_test
+from logger import log
+
 
 SETTINGS = {
     "FONT_PATH": "fonts/ucs-fonts/7x13.bdf",
@@ -51,7 +53,6 @@ def all_faces():
         "T _ T",  # 23
         "τ _ τ",
         "v _ v",
-        "",  # WAS DUPLICATE
         "n _ n",
         "O ω O",
         "ὲ ◡ έ",
@@ -60,7 +61,7 @@ def all_faces():
         "' o '",
         "∩ _ ∩",
         "- ◡ O",  # 34 - THIS IS WHERE MEMORY ALLOCATION FAILS
-        "c(_)  ",
+        "c(_) ",
         # "⚆ _ ⚆",  # Unsupported glyph
         "# _ #",
     ]
@@ -82,7 +83,7 @@ def tam_tam_faces(mood):
             "frames": 6,
         },
         "tea": {
-            "faces": [2, 35],
+            "faces": [2, 34],
             "frames": 6,
         },
         "eating": {
@@ -122,11 +123,11 @@ def tam_tam_faces(mood):
             "frames": 3,
         },
         "sneaky": {
-            "faces": [15, 28, 29, 30, 27],
+            "faces": [15, 27, 28, 29, 26],
             "frames": 4,
         },
         "random": {
-            "faces": [31, 32, 33, 34, 27],
+            "faces": [30, 31, 32, 33, 26],
             "frames": 1,
         },
     }
@@ -134,12 +135,16 @@ def tam_tam_faces(mood):
 
 
 def current_face_string(elapsed_time):
-    """Returns a string value 5 characters long containing the current tamtam face expression"""
+    """Returns a string value containing the current tamtam face expression"""
     mood = "all"
     indexes = tam_tam_faces(mood)
     frames_elapsed = int(elapsed_time * 30 / (len(indexes) - 1))
     frame = frames_elapsed % len(indexes)
     current_face = all_faces()[indexes[frame]]
+    if len(current_face) != SETTINGS["TAM_TAM_WIDTH"]:
+        log("Frame", frame)
+        log("Indexes", indexes[frame])
+        raise Exception(f"Oops! '{current_face}' is not the right length")
     return current_face
 
 
@@ -168,42 +173,14 @@ def font_setup():
     SETTINGS["Y_HEIGHT"] = SETTINGS["CHAR_HEIGHT"] // 2
 
 
-@time_test("Make string bitmap")
-def update_tile_grid(string, sx=0, sy=0):
-    # see https://learn.adafruit.com/circuitpython-display-support-using-displayio/tilegrid-and-group
-    # @todo update this later when there's more than one row:
-    def get_sprite_position(char):
-        return SPRITES["LIST"].index(char)
-    
-    # Add each sprite in the new face
-    for index, char in enumerate(string):
-        SPRITES["TILE_GRID"][index, 0] = get_sprite_position(char)
-
-    # For now just return an empty group  @todo
-    group = new_group()
-    return group
-
-
-    
-def centered_text(string, sy=10):
-    width = len(string) * SETTINGS["CHAR_WIDTH"]
-    sx = (SETTINGS["OLED_DISPLAY"].width - width) // 2
-    bitmap = update_tile_grid(string, sx, sy)
-    return bitmap
-
-
-def current_face_sprite(face_string, sy):
-    # @todo test the time this takes against a spritesheet
-    return centered_text(face_string, sy)
-
-
-def setup_tile_grid(canvas):
+@time_test("Set up tile grid")
+def set_up_tile_grid(canvas):
     SPRITES["PALETTE"][0] = 0x000000
     SPRITES["PALETTE"][1] = 0xFFFFFF
     return new_tile_grid(
         canvas,
         pixel_shader=SPRITES["PALETTE"],
-        width=5,
+        width=SETTINGS["TAM_TAM_WIDTH"],
         height=1,
         tile_width=SETTINGS["CHAR_WIDTH"],
         tile_height=SETTINGS["CHAR_HEIGHT"],
@@ -213,6 +190,11 @@ def setup_tile_grid(canvas):
 @time_test("Make sprite sheet")
 def make_sprite_sheet():
     """Creates a displayio TileGrid containing all the different parts of the tamtam faces to be used as sprites"""
+    
+    @time_test("Make char")
+    def make_sprite(char):
+        return bitmap_label.Label(SETTINGS["FONT"], text=char, color=0xFFFFFF)
+
     # @todo figure out why there's a few lines of pixels + a red one at the top of the bitmap
     # @later try also saving the 1/0 bitmaps to more condensed formats?
 
@@ -236,25 +218,52 @@ def make_sprite_sheet():
             canvas[x * 2, y * 2] = 1
 
     # Make a tile grid for tamtam faces that we can display canvas tiles to
-    SPRITES["TILE_GRID"] = setup_tile_grid(canvas)
+    SPRITES["TILE_GRID"] = set_up_tile_grid(canvas)
 
     # Attempt to save the spritesheet in case the drive is writable
     try:
         save_pixels("sprite_sheet.bmp", canvas, SPRITES["PALETTE"])
-        print("Bitmap saved!")
+        log("Bitmap saved!")
     except OSError as _:
         # Typical error when the filesystem isn't writeable
-        print(
-            "Sprite sheet not exported because the drive is in USB mode; reset with the button to change back (or uncomment out the drive-disabling code in boot.py)"
-        )
+        log("Sprite sheet not exported because the drive is in USB mode")
 
+
+@time_test("Make string bitmap")
+def update_tile_grid(string, sx=0, sy=0):
+    # see https://learn.adafruit.com/circuitpython-display-support-using-displayio/tilegrid-and-group
+    # @todo update this later when there's more than one row:
+    def get_sprite_position(char):
+        return SPRITES["LIST"].index(char)
+
+    # Add each sprite in the new face
+    for index, char in enumerate(string):
+        SPRITES["TILE_GRID"][index] = get_sprite_position(char)
+
+    # For now just return an empty group  @todo
+    group = new_group()
+    return group
+
+
+def centered_text(string, sy=10):
+    width = len(string) * SETTINGS["CHAR_WIDTH"]
+    sx = (SETTINGS["OLED_DISPLAY"].width - width) // 2
+    bitmap = update_tile_grid(string, sx, sy)
+    return bitmap
+
+
+def current_face_sprite(face_string, sy):
+    # @todo test the time this takes against a spritesheet
+    return centered_text(face_string, sy)
+
+
+def get_expression_width():
+    """Checks through all the tam tam expressions and returns the length of the longest string"""
+    return max(map(len, all_faces()))
 
 def init():
-    @time_test("Make char")
-    def make_sprite(char):
-        return bitmap_label.Label(SETTINGS["FONT"], text=char, color=0xFFFFFF)
-
     font_setup()
+    SETTINGS["TAM_TAM_WIDTH"] = get_expression_width()
     make_sprite_sheet()
 
 

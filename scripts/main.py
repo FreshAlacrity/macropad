@@ -10,9 +10,9 @@
 # pylint: disable=import-error, c-extension-no-member
 
 # Disabled for quick prototyping:
-# pylint: disable=broad-exception-raised
+# pylint: disable=broad-exception-raised, no-value-for-parameter
 
-
+# import supervisor
 from adafruit_macropad import MacroPad
 from layers import get_action
 from layers import get_layer_color
@@ -20,9 +20,10 @@ from layers import get_layer_pattern
 from mappings import do_key_action
 from mappings import current_layer_name
 from mappings import close_out
-from timetest import time_test
 from display import update_display
-from logs import log
+from logger import log
+
+# supervisor.runtime.autoreload = False
 
 # Settings
 INIT_ACTION = "Mouse"
@@ -32,43 +33,16 @@ DEBUG = True
 # Initialize and rotate the MacroPad so that the OLED is on the left
 macropad = MacroPad(90)
 
-
 # Initial values
 SETTINGS = {
     "idle_time": 0,
     "encoder_position": 0,
-    
     # Smaller numbers are faster (in loops not real time)
     "FRAME_RATE": 1
 }
 keys_held = []
 
 
-# @todo get this working so it restores the USB connection
-@time_test("File write attempt")
-def file_write_attempt():
-    try:
-        modes = {
-            "Read": "r",  # Errors if it doesn't exist
-            "Append": "a",
-            "Write": "w",  # Creates if it doesn't exist
-            "Create": "x"  # Errors if it *does* exist
-        }
-        
-        with open("/settings.toml", mode=modes["Append"], encoding="utf-8") as fp:
-            while True:
-                fp.write("HELLO WORLD! ")
-                fp.flush()
-    except OSError as _:
-        # Typical error when the filesystem isn't writeable
-        print("No files were written because the drive is in USB mode; reset with the button to change back (or uncomment out the drive-disabling code in boot.py)")
-
-file_write_attempt()
-
-
-log("ARE WE BACK?! WE'RE BACK!")
-
-        
 def input_action(current_key_num, index=0):
     """Retrieves and executes the action assigned to this key number on the current layer."""
     action = get_action(current_key_num, current_layer_name())
@@ -105,15 +79,9 @@ def update():
 
 
 def init():
-    print("\n\n\n\n\nBooting...\n")
+    log("ARE WE BACK?! WE'RE BACK!")
     do_key_action(INIT_ACTION)
     update()
-
-    # Loop forever so you can enjoy your image
-    #while True:
-        #pass
-
-    # print("LAYER:", current_layer_name())
 
 
 # Main Loop

@@ -15,6 +15,7 @@ from adafruit_hid.mouse import Mouse
 from adafruit_hid.consumer_control import ConsumerControl
 from adafruit_hid.consumer_control_code import ConsumerControlCode
 from layers import get_layer_names  # type: ignore
+from logger import log
 
 SETTINGS = {
     "mouse_speed": 10,
@@ -145,7 +146,7 @@ def layer(layer_name):  # , inputs=0, time=sleep_time, entering=True):
     # @todo implement exit layer to parent
     SETTINGS["current_layer"] = layer_names.index(layer_name)
     SETTINGS["selected_layer"] = SETTINGS["current_layer"]
-    print("\nCurrent Layer:\n", current_layer_name())
+    log("Current Layer:", current_layer_name())
 
 
 
