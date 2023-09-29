@@ -29,11 +29,9 @@ def log_to_file(log_text):
             "Create": "x",  # Errors if it *does* exist
         }
         file_path = "/logs/most_recent.txt"
-        with open(file_path, mode=modes["Append"], encoding="utf-8") as fp:
-            while True:
-                fp.write(f"\n{monotonic}: {log_text}")
-                fp.flush()
-                return True
+        with open(file_path, mode=modes["Append"], encoding="utf-8") as f:
+            f.write(f"\n{monotonic()}: {log_text}")
+            f.flush()
     except OSError as _:
         # Typical error when the filesystem isn't writeable
         print("Drive is in USB mode")
