@@ -16,9 +16,9 @@ def layer_map():
                 ["m_dn"],
                 ["m_rt"],
                 ["m_stop"],
-                ["l_tab"],
+                [""],
                 ["m_drag"],
-                ["r_tab"],
+                [""],
             ],
         },
         "Mouse": {

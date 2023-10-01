@@ -1,9 +1,6 @@
-# Version 0.4
+# Version 0.5
 
 # CTRL+ALT+R > CTRL+C to enter REPL, CTRL+D to soft reboot
-
-# Based on: MacroPad HID keyboard and mouse demo,
-# Unlicense 2021 by Kattni Rembor for Adafruit Induencoder_positiones
 
 # Since imports that work great in execution aren't being recognized:
 # pyright: reportMissingImports=false
@@ -12,8 +9,10 @@
 # Disabled for quick prototyping:
 # pylint: disable=broad-exception-raised, no-value-for-parameter
 
-# import supervisor
+import sys
 from adafruit_macropad import MacroPad
+
+sys.path.append("scripts")
 from layers import get_action
 from layers import get_layer_color
 from layers import get_layer_pattern
@@ -23,6 +22,8 @@ from mappings import close_out
 from display import update_display
 from logger import log
 
+# Stops reload on save:
+# import supervisor
 # supervisor.runtime.autoreload = False
 
 # Settings
@@ -143,5 +144,5 @@ while True:
         update()
 
     except Exception as err:
-        print("Error: {}, {}".format(err, type(err)))
+        log("Error: {}, {}".format(err, type(err)))
         raise
