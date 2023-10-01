@@ -32,8 +32,8 @@ def can_write_itself():
 
 
 def check_file():
+    """Boots the keyboard with the drive visible unless the toggle file has been edited or deleted"""
     try:
-        """Boots the keyboard with the drive visible unless the toggle file has been edited or deleted"""
         # Check the file for the message that says to show itself as a USB drive
         with open(FILE_PATH, mode="r", encoding="utf-8") as f:
             test = f.read()

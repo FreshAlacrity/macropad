@@ -22,7 +22,7 @@ SETTINGS = {
     "current_layer": 0,
     "selected_layer": 0,
     "mouse_scoot": 2,
-    "sleep_time": 1000,
+    "sleep_time": 1000
 }
 layer_names = get_layer_names()
 MOUSE_DELTA = {"x": 0, "y": 0}
@@ -36,6 +36,8 @@ ALIASES = {
         "CTRL": "CONTROL",
         "PG_DN": "PAGE_DOWN",
         "PG_UP": "PAGE_UP",
+        "L_TAB": "LEFT_TAB",
+        "L_SHIFT": "LEFT_SHIFT"
     },
     "CONSUMER_CONTROL": {
         "VOL_DOWN": "VOLUME_DECREMENT",
@@ -74,7 +76,7 @@ def mouse_move(x_delta, y_delta):
     MOUSE_DELTA["y"] = MOUSE_DELTA["y"] + y_delta * speed
 
 
-def close_out():
+def final_actions():
     # Called at the end of the main loop
     if MOUSE_DELTA["x"] != 0 or MOUSE_DELTA["y"] != 0:
         m.move(x=MOUSE_DELTA["x"], y=MOUSE_DELTA["y"])

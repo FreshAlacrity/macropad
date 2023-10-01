@@ -70,6 +70,7 @@ Called on release, if False default back to above action:
 -  hold: if not released quickly
 .- tap-hold: overrides regular hold behavior immediately after a tap
 -- hold-hold: overrides regular hold behavior immediately after a hold
+*  sticky: overrides regular behavior completely, diverts to temporary action
 
 Called on key press/while held:
 ^  immediate: when pressed
