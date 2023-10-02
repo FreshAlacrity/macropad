@@ -77,7 +77,8 @@ Called on key press/while held:
 =  input: constant + immediate input while being held (for opening layers and game input)
 
 ## To Do
-- refactor to support all key actions listed above
+- [ ] refactor to support all key actions listed above
+  - [ ] use string names for the key action types ("pressed", "released", "held", "turned")
 - add aliases for l_tab l_shift r_shift etc
 - Goal: Replace the Mouse
   - [ ] desired behavior: if the last action was holding the same key, resume hold (otherwise immediately do the tap action)

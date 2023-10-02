@@ -344,8 +344,9 @@ def track_hold(action_name, index):
             HOLD_DURATION[action_name] = 1
 
 
-def do_key_action(action_name, index=0):
-    # Note: currently for index 0 is press, 1 is release, 2 is hold
+def do_key_action(action_name, action_type):
+    # Intermediate support:
+    index = ["pressed", "released", "held"].index(action_type)
     # macropad.play_tone(396, .2)
     # action_type = ["press", "release", "hold"][index]
     # print("\nAction received: '{}'\nType: {}\n".format(action_name, action_type))

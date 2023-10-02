@@ -37,19 +37,23 @@ SETTINGS = {
 }
 
 
-def input_action(current_key_num, index=0):
-    """Retrieves and executes the action assigned to this key number on the current layer."""
-    action = get_action(current_key_num, current_layer_name())
-    do_key_action(action, index)
+def input_action(key_num, action_type):
+    # Retrieve the action associated with this key
+    # @todo have this take into account the action type
+    action = get_action(key_num, current_layer_name())
+
+    # Send it off to be acted on
+    do_key_action(action, action_type)
+
+    # Refresh the idle time counter
     unsleep()
-    # @todo here - log the action somehow
 
 
 def get_idle_time():
     return SETTINGS["idle_time"]
 
 
-def update_LEDs(off=False):
+def update_leds(off=False):
     if off:
         for i in range(12):
             macropad.pixels[i] = (0, 0, 0)
@@ -61,7 +65,7 @@ def update_LEDs(off=False):
 
 
 def sleep():
-    update_LEDs(off=True)
+    update_leds(off=True)
 
 
 def unsleep():
@@ -76,7 +80,7 @@ def close_out():
     else:
         if get_idle_time() == 0:
             final_actions()
-            update_LEDs()
+            update_leds()
         update_display()
 
 
@@ -88,7 +92,7 @@ def init():
     
     # Get things going!
     log("ARE WE BACK?! WE'RE BACK!")
-    do_key_action(SETTINGS["INIT_ACTION"])
+    do_key_action(SETTINGS["INIT_ACTION"], action_type="pressed")
     close_out()
 
 
@@ -101,11 +105,11 @@ def check_keys():
             key_num = key_event.key_number + 3
 
             if key_event.pressed:
-                input_action(key_num, 0)
+                input_action(key_num, action_type="pressed")
                 SETTINGS["keys_held"].append(key_num)
 
             if key_event.released:
-                input_action(key_num, 1)
+                input_action(key_num, action_type="released")
                 SETTINGS["keys_held"].remove(key_num)
 
         if macropad.keys.events.overflowed:
@@ -114,7 +118,7 @@ def check_keys():
 
 def check_held_keys():
     for key in SETTINGS["keys_held"]:
-        input_action(key, 2)
+        input_action(key, "held")
 
 
 def check_rotary_encoder():
@@ -123,15 +127,15 @@ def check_rotary_encoder():
     current_position = macropad.encoder
 
     if macropad.encoder_switch_debounced.pressed:
-        input_action(2, 0)
+        input_action(2, "pressed")
 
     # Clockwise turn detected
     if macropad.encoder > SETTINGS["encoder_position"]:
-        input_action(0, 0)
+        input_action(0, "pressed")
 
     # Counterclockwise turn detected
     elif macropad.encoder < SETTINGS["encoder_position"]:
-        input_action(1, 0)
+        input_action(1, "pressed")
 
     SETTINGS["encoder_position"] = current_position
 
