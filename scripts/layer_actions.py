@@ -1,3 +1,7 @@
+# Since imports that work great in execution aren't being recognized:
+# pyright: reportMissingImports=false
+# pylint: disable=import-error, c-extension-no-member
+
 from logger import log
 from layer_map import get_layer_map
 

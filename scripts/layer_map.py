@@ -1,3 +1,17 @@
+# Since imports that work great in execution aren't being recognized:
+# pyright: reportMissingImports=false
+# pylint: disable=import-error, c-extension-no-member
+
+# Disabled for quick prototyping:
+# pylint: disable=broad-exception-raised, pointless-string-statement, missing-function-docstring, no-value-for-parameter
+
+
+from time_test import time_test
+from layers import get_layers
+
+SETTINGS = {}
+
+
 def get_key_layout(wide=True, left_handed=True):
     def make_tuples(list_in):
         return list(map(lambda n: (n,), list_in))
@@ -41,84 +55,32 @@ def get_key_layout(wide=True, left_handed=True):
 
 
 def get_layer_map():
-    """ " Layer Structure/Key Location Keywords:
+    return SETTINGS["LAYER_MAP"]
 
-    New Layer": {
-            "actions": {
-                "turn_up": "",
-                "turn_down": "",
-                "turn_click": "",
-                "left_2": "",
-                "up": "",
-                "right_2": "",
-                "left": "",
-                "down": "",
-                "right": "",
-                "left_3": "",
-                "down_2": "",
-                "right_3": "",
-                "outer_1": "",
-                "mid_1": "",
-                "inner_1": "",
-                "outer_2": "",
-                "mid_2": "",
-                "inner_2": "",
-                "outer_3": "",
-                "mid_3": "",
-                "inner_3": "",
-                "extra_1": "",
-                "extra_2": "",
-                "thumb": "",
-            }
-        }
-    """
-    return {
-        "Default": {
-            "actions": {
-                "turn_up": "vol_up",
-                "turn_down": "vol_dn",
-                "turn_click": "Layer Select"
-                # @todo add cut copy paste?
-            }
-        },
-        "Mouse": {
-            "actions": {
-                # "turn_up": "inherit", # @todo get these working
-                # "turn_down": "inherit",
-                # "turn_click": "uninherit",
-                "left_2": "l_click",
-                "right_2": "r_click",
-                "up": "mouse_up",
-                "down": "mouse_down",
-                "left": "mouse_left",
-                "right": "mouse_right",
-                # "down_2": "m_drag", # @todo get this working as a toggle
-                "left_3": "l_tab",
-                "right_3": "r_tab",
-            }
-        },
-        "Game": {
-            "actions": {
-                "turn_up": "inherit",
-                "turn_down": "inherit",
-                "up": "hold_w",
-                "left_2": "q",
-                "right_2": "e",
-                "down": "hold_s",
-                "left": "hold_a",
-                "right": "hold_d",
-                "left_3": "l_tab",
-                "right_3": "r_tab",
-                "extra_1": "m",
-                "extra_2": "hold_ctrl",
-                "thumb": "hold_shift",
-            }
-        },
-        "Layer Select": {
-            "actions": {
-                "turn_up": "ls_up", 
-                "turn_down": "ls_dn", 
-                "turn_click": "ls_go"
-            }
-        },
-    }
+
+@time_test("Layer action")
+def layer_action(key_ref, layer_name):
+    """Finds the names of any actions assigned to this numbered or nicknamed key location"""
+    layer_actions = SETTINGS["LAYER_MAP"][layer_name]["actions"]
+    
+    # Retrieve any names for this key if needed
+    if isinstance(key_ref, int):
+        key_names = SETTINGS["KEY_LAYOUT"][key_ref]
+    else:
+        key_names = (key_ref,)
+        
+    current_layer_actions = [layer_actions[x] for x in key_names if x in layer_actions]
+    if current_layer_actions:
+        return current_layer_actions
+    else:
+        # Reimplement falling back to lower layers @later
+        layer_actions = SETTINGS["LAYER_MAP"]["Default"]["actions"]
+        return [layer_actions[x] for x in key_names if x in layer_actions]
+
+
+def init():
+    SETTINGS["KEY_LAYOUT"] = get_key_layout()
+    SETTINGS["LAYER_MAP"] = get_layers()
+
+
+init()

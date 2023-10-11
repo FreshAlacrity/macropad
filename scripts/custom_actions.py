@@ -1,5 +1,5 @@
 # Disabled for quick prototyping:
-# pylint: disable=broad-exception-raised, no-value-for-parameter
+# pylint: disable=broad-exception-raised, no-value-for-parameter, import-error
 
 from logger import log
 from layer_actions import set_layer
@@ -31,8 +31,6 @@ custom_key_actions = {
 
 @time_test("Custom action")
 def custom_action(action_name, action_type):
-    log(f"Custom action? {action_name} - {action_type}")
-    
     if mouse_action(action_name, action_type):
         # Valid mouse action, mouse action taken, no need to continue
         return True
@@ -57,4 +55,6 @@ def custom_action(action_name, action_type):
                     # print("Executing function with other/string arguments")
                     action[0](arg)
             else:
-                log("Error - assigned action does not exist")
+                raise KeyError(f"Custom named action not found: {action_name}  - {action_type}")
+        else:
+            log(f"Custom action not found: {action_name}  - {action_type}")

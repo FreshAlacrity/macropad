@@ -2,6 +2,8 @@ def identify(action_name):
     ALIASES = {
         # MACROS:
         "DRIVE_F": "WIN + E > CTRL > CTRL > CTRL + L > write_F: > ENTER",
+        "TAB_LEFT": "CTRL + SHIFT + TAB",
+        "TAB_RIGHT": "CTRL + TAB",
         # MOUSE
         "R_CLICK": "RIGHT_BUTTON",
         "L_CLICK": "LEFT_BUTTON",

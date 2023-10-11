@@ -28,9 +28,9 @@ def final_actions():
     update_mouse()
 
 
-def print_key_actions_list():
+def log_key_actions_list():
     # @todo
-    print("Key actions:\n", ", ".join([]))
+    log("Key actions:\n", ", ".join([]))
 
 
 # @todo fix this so it breaks things into actions instead
@@ -61,8 +61,6 @@ def do_key_action(action_name, action_type):
             and not action_name == action_name.upper()
         )
 
-    log(f"\nAction received: '{action_name}'\nType: {action_type}\n")
-
     # @todo detect macros here
     action_name = identify(action_name)
 
@@ -77,7 +75,7 @@ def do_key_action(action_name, action_type):
                     Keyboard(devices).press(keycode)
                 elif action_type == "released":
                     Keyboard(devices).release(keycode)
-        else:
+        else:            
             # Handle mouse clicks
             if action_name in dir(Mouse):
                 keycode = getattr(Mouse, action_name.upper())
@@ -91,6 +89,7 @@ def do_key_action(action_name, action_type):
                 # Handle all other input types:
                 custom_action(action_name, action_type)
     if action_type == "pressed":
+         
         # Detect and handle string input:
         action_name, write_this = check_prefix(action_name, "write_")
         if write_this:
@@ -102,16 +101,17 @@ def do_key_action(action_name, action_type):
             Keyboard(devices).send(Keycode.SHIFT, keycode)
 
         # Detect and handle plain keycodes:
-        elif action_name in dir(Keycode):
+        elif hasattr(Keycode, action_name.upper()):
             keycode = getattr(Keycode, action_name.upper())
-            Keyboard(devices).send(getattr(Keycode, keycode))
+            Keyboard(devices).send(keycode)
 
         # Detect and handle consumer control codes:
-        elif action_name in dir(ConsumerControlCode):
+        elif hasattr(ConsumerControlCode, action_name.upper()):
             cc_code = getattr(ConsumerControlCode, action_name.upper())
             ConsumerControl(devices).send(cc_code)
 
-        elif action_name in dir(Mouse):
+        # Detect and handle standard mouse actions
+        elif hasattr(Mouse, action_name.upper()):
             Mouse(devices).click(getattr(Mouse, action_name.upper()))
 
         # Handle all other input types:

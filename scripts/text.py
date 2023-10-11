@@ -61,5 +61,7 @@ def multi_line_text(string, sx, sy):
 
 
 def new_layer_bitmap(layer_name):
-    vertical_offset = DISPLAY_SETTINGS["OLED_DISPLAY"].height - DISPLAY_SETTINGS["CHAR_HEIGHT"]
+    vertical_offset = 0
+    # for bottom of screen:
+    # DISPLAY_SETTINGS["OLED_DISPLAY"].height - DISPLAY_SETTINGS["CHAR_HEIGHT"]
     return multi_line_text(layer_name, 0, vertical_offset)

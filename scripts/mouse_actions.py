@@ -1,5 +1,5 @@
 # Disabled for quick prototyping:
-# pylint: disable=broad-exception-raised, no-value-for-parameter
+# pylint: disable=broad-exception-raised, no-value-for-parameter, import-error, unused-import
 
 from usb_hid import devices
 from logger import log
@@ -23,7 +23,7 @@ m = Mouse(devices)
 @time_test("Mouse move")
 def mouse_move(x_delta, y_delta):
     speed = SETTINGS["mouse_speed"]
-    log(f"X Delt: {x_delta} Y Delt: {y_delta} Speed: {speed}")
+    # log(f"X Delt: {x_delta} Y Delt: {y_delta} Speed: {speed}")
     MOUSE_DELTA["x"] = MOUSE_DELTA["x"] + x_delta * speed
     MOUSE_DELTA["y"] = MOUSE_DELTA["y"] + y_delta * speed
 
