@@ -1,4 +1,4 @@
-# Version 0.5
+# Version 0.6
 
 # CTRL+ALT+R > CTRL+C to enter REPL, CTRL+D to soft reboot
 
@@ -13,37 +13,55 @@ import sys
 from adafruit_macropad import MacroPad
 
 sys.path.append("scripts")
-from layers import get_action
-from layers import get_layer_color
-from layers import get_layer_pattern
-from mappings import do_key_action
-from mappings import current_layer_name
-from mappings import final_actions
+from layer_map import get_key_layout
+from layer_map import get_layer_map
+from layer_actions import current_layer_name
+from actions import do_key_action
+from actions import final_actions
 from display import update_display
+from time_test import time_test
 from logger import log
+
+
+SETTINGS = {
+    "INIT_ACTION": "Mouse",
+    "TAP_DURATION": 0.1,  # TBD, in seconds?
+    "SLEEP_AT": 100000,
+    "ROTATION": 270,
+    "LAYOUT": get_key_layout(),
+    "LAYERS": get_layer_map()
+}
 
 # Stops reload on save:
 # import supervisor
 # supervisor.runtime.autoreload = False
 
 # Initialize and rotate the MacroPad so that the OLED is on the left
-macropad = MacroPad(90)
+macropad = MacroPad(SETTINGS["ROTATION"])
 
-# Initial values
-SETTINGS = {
-    "INIT_ACTION": "Mouse",
-    "TAP_DURATION": 0.1,  # TBD, in seconds?
-    "SLEEP_AT": 100000
-}
+@time_test("Layer action")
+def layer_action(key_names):
+    layer_actions = SETTINGS["LAYERS"][current_layer_name()]["actions"]
+    
+    current_layer_actions = [layer_actions[x] for x in key_names if x in layer_actions]
+    if current_layer_actions:
+        return current_layer_actions
+    else:
+        # Reimplement falling back to lower layers @later
+        layer_actions = SETTINGS["LAYERS"]["Default"]["actions"]
+        return [layer_actions[x] for x in key_names if x in layer_actions]
+    
+
+def get_actions(key_num):
+    key_names = SETTINGS["LAYOUT"][key_num]
+    return layer_action(key_names)
 
 
-def input_action(key_num, action_type):
-    # Retrieve the action associated with this key
-    # @todo have this take into account the action type
-    action = get_action(key_num, current_layer_name())
+def input_action(key_actions, action_type):
 
     # Send it off to be acted on
-    do_key_action(action, action_type)
+    for action in key_actions:
+        do_key_action(action, action_type)
 
     # Refresh the idle time counter
     unsleep()
@@ -53,19 +71,11 @@ def get_idle_time():
     return SETTINGS["idle_time"]
 
 
-def update_leds(off=False):
-    if off:
-        for i in range(12):
-            macropad.pixels[i] = (0, 0, 0)
-    else:
-        color = get_layer_color(current_layer_name())
-        pattern = get_layer_pattern(current_layer_name())
-        for i in pattern:
-            macropad.pixels[i] = color
-
-
 def sleep():
-    update_leds(off=True)
+    # @todo Set the timer to 0
+    # @todo turn off the screen
+    # @todo slow down the main loop to once every tenth of a second-ish
+    pass
 
 
 def unsleep():
@@ -80,7 +90,6 @@ def close_out():
     else:
         if get_idle_time() == 0:
             final_actions()
-            update_leds()
         update_display()
 
 
@@ -89,55 +98,67 @@ def init():
     SETTINGS["encoder_position"] = 0
     SETTINGS["keys_held"] = []
     unsleep()
-    
+
     # Get things going!
     log("ARE WE BACK?! WE'RE BACK!")
     do_key_action(SETTINGS["INIT_ACTION"], action_type="pressed")
     close_out()
 
+    macropad.play_tone(196, 0.1)
+    macropad.play_tone(220, 0.1)
+    macropad.play_tone(246, 0.1)
+    
 
+@time_test("Key press/release check")
 def check_keys():
     """Check for key presses send any input to action handler"""
+    
+    tones = [196, 220, 246, 262, 294, 330, 349, 392, 440, 494, 523, 587]
+                
     while macropad.keys.events:
         key_event = macropad.keys.events.get()
         if key_event:
-            # Adds 3 to skip the rotary encoder inputs
-            key_num = key_event.key_number + 3
-
+            key_num = key_event.key_number
+            actions = get_actions(key_num)
+            
             if key_event.pressed:
-                input_action(key_num, action_type="pressed")
+                input_action(actions, action_type="pressed")
                 SETTINGS["keys_held"].append(key_num)
+                macropad.play_tone(tones[key_num], 0.1)
+                # macropad.start_tone(tones[key_num])
 
             if key_event.released:
-                input_action(key_num, action_type="released")
+                input_action(actions, action_type="released")
                 SETTINGS["keys_held"].remove(key_num)
+                #macropad.stop_tone()
 
         if macropad.keys.events.overflowed:
             raise Exception("Key event overflow!")
 
-
+@time_test("Held keys check")
 def check_held_keys():
-    for key in SETTINGS["keys_held"]:
-        input_action(key, "held")
+    for key_num in SETTINGS["keys_held"]:
+        input_action(get_actions(key_num), "held")
 
-
+@time_test("Rotary encoder check")
 def check_rotary_encoder():
     """Check for rotary encoder input and send any input to action handler"""
     macropad.encoder_switch_debounced.update()
-    current_position = macropad.encoder
-
+    
+    # Rotary encoder pressed
     if macropad.encoder_switch_debounced.pressed:
-        input_action(2, "pressed")
+        input_action(layer_action(("turn_click",)), "pressed")
 
     # Clockwise turn detected
     if macropad.encoder > SETTINGS["encoder_position"]:
-        input_action(0, "pressed")
+        input_action(layer_action(("turn_up",)), "pressed")
 
     # Counterclockwise turn detected
     elif macropad.encoder < SETTINGS["encoder_position"]:
-        input_action(1, "pressed")
+        input_action(layer_action(("turn_down",)), "pressed")
 
-    SETTINGS["encoder_position"] = current_position
+    # Keep track of the current position to detect changes
+    SETTINGS["encoder_position"] = macropad.encoder
 
 
 # Main Loop

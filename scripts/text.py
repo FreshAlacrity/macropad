@@ -2,10 +2,13 @@
 # pyright: reportMissingImports=false
 # pylint: disable=import-error, c-extension-no-member
 
+# Disabled for quick prototyping:
+# pylint: disable=broad-exception-raised, no-value-for-parameter
+
 import board
 import terminalio
 from adafruit_display_text import label
-from timetest import time_test
+from time_test import time_test
 
 
 DISPLAY_SETTINGS = {

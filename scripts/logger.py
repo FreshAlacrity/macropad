@@ -2,12 +2,13 @@
 # pyright: reportMissingImports=false
 # pylint: disable=import-error
 
-import adafruit_logging as logging
-from time import monotonic
-from timetest import time_test
-
 # Disabled for quick prototyping:
 # pylint: disable=broad-exception-raised, no-value-for-parameter
+
+import adafruit_logging as logging
+from time import monotonic
+from time_test import time_test
+
 
 LEVELS = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 

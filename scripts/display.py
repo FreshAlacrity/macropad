@@ -13,9 +13,7 @@ from adafruit_display_shapes.rect import Rect
 
 # from adafruit_display_shapes.circle import Circle
 # from adafruit_display_shapes.triangle import Triangle
-from tamtam import current_face_string
-from tamtam import current_face_sprite
-from mappings import current_layer_name
+from layer_actions import current_layer_name
 from text import new_layer_bitmap
 
 
@@ -49,8 +47,8 @@ def init():
     
     # Set which local functions are used to
     # check values and construct objects
-    STORAGE["GETTER"]["TAM_TAM"] = current_tam_tam_frame
-    STORAGE["MAKER"]["TAM_TAM"] = tam_tam
+    # STORAGE["GETTER"]["TAM_TAM"] = current_tam_tam_frame
+    # STORAGE["MAKER"]["TAM_TAM"] = tam_tam
     STORAGE["MAKER"]["BAR"] = progress_bar
     STORAGE["GETTER"]["BAR"] = current_progress
     
@@ -78,12 +76,6 @@ def elapsed_time():
     return time.monotonic() - SETTINGS["START_TIME"]
 
 
-def current_tam_tam_frame():
-    return current_face_string(elapsed_time())
-
-
-
-
 def current_progress():
     delay = 200
     frames = SETTINGS["OLED_DISPLAY"].width - 2
@@ -95,11 +87,6 @@ def progress_bar(frame):
     """Adds a tamtam face to the current display group"""
     y_height = SETTINGS["PROGRESS_BAR_HEIGHT"]
     return Rect(1, y_height, frame, 10, fill=0xFFFFFF)
-
-
-def tam_tam(current_face):
-    """Returns a bitmap tamtam face in the appropriate position"""
-    return current_face_sprite(current_face, 15)
 
 
 def create_main_bitmap():
@@ -144,7 +131,7 @@ def update_display():
 
     # @todo check that getters and makers have the same keys
     # @todo use that list of keys here
-    for e in ["LAYER", "BAR", "TAM_TAM"]:
+    for e in ["LAYER", "BAR"]: # , "TAM_TAM"]:
         check_and_update(e)
 
     # Updates the display to show the frame group
