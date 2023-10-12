@@ -51,6 +51,17 @@ def get_layers():
                 "thumb": "space",
             }
         },
+        "Arrows": {
+            "actions": {
+                "left_2": "l_click",
+                "right_2": "r_click",
+                "up": "hold_up_arrow",
+                "down": "hold_down_arrow",
+                "left": "hold_left_arrow",
+                "right": "hold_right_arrow",
+                "extra_1": "Mouse",
+            }
+        },
         "Mouse": {
             "actions": {
                 # "turn_up": "inherit", # @todo get these working
@@ -62,6 +73,7 @@ def get_layers():
                 "down": "mouse_down",
                 "left": "mouse_left",
                 "right": "mouse_right",
+                "extra_1": "Arrows",
                 # "down_2": "m_drag", # @todo get this working as a toggle
                 # "left_3": "tab_left",
                 # "right_3": "tab_right",

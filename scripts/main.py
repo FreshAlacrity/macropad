@@ -24,7 +24,7 @@ from logger import log
 
 
 SETTINGS = {
-    "INIT_ACTION": "Mouse",
+    "INIT_ACTION": "Arrows",
     "SLEEP_AT": 100000,
     "ROTATION": 270
 }

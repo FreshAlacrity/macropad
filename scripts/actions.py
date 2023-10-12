@@ -47,82 +47,199 @@ def macro(string):
 
 
 def check_prefix(action_name, prefix):
-    test = action_name[0 : len(prefix)] == prefix
-    if test:
-        action_name = identify(action_name[len(prefix)])
-    return action_name, test
+    has_prefix = action_name[0 : len(prefix)] == prefix
+    if has_prefix:
+        # Trim the prefix off and re-check against aliases:
+        action_name = identify(action_name[len(prefix) :])
+    return action_name, has_prefix
+
+
+def hid_action(action_name, action_type):
+    """Sends the appropriate signal over the HID USB connection if a code is found in any of the HID directories
+    Note: upper and lowercase letters need to be in the appropriate case in action_name to be sent correctly"""
+
+    def check_dir(directory):
+        return hasattr(directory, action_name.upper())
+
+    is_uppercase = (
+        len(action_name) == 1
+        and action_name.isalpha()
+        and not action_name == action_name.upper()
+    )
+
+    action_name, hold_action = check_prefix(action_name, "hold_")
+    
+    # Lists of accepted HID inputs and what function accepts those codes
+    directories = (Keycode, ConsumerControlCode, Mouse)
+    controllers = (Keyboard, ConsumerControl, Mouse)
+
+    # Checks to see if any of the directories have the action_name in them
+    built_in = [check_dir(x) for x in directories]
+
+    if any(built_in):
+        log("HERE")
+        # From the HID input options, find the correct directory and controller
+        controller = controllers[built_in.index(True)]
+        directory = directories[built_in.index(True)]
+        
+        # Treat mouse clicks etc as held actions
+        # (The mouse HID can't interpret send actions)
+        if not hold_action and directory == Mouse:
+            hold_action = True
+
+        # Get the code from the directory to send through the HID controller
+        code = getattr(directory, action_name.upper())
+
+        # Send the appropriate signal with the code through the controller
+        if action_type == "pressed" and hold_action:
+            # Tell the computer we've started to hold the key
+            controller(devices).press(code)
+        elif action_type == "released" and hold_action:
+            # Tell the computer we've stopped holding the key
+            controller(devices).release(code)
+        elif action_type == "pressed" and not hold_action:
+            # Regular keypress (sent immediately)
+            if is_uppercase:
+                controller(devices).send(Keycode.SHIFT, code)
+            else:
+                controller(devices).send(code)
+                
+        # Let the action handler know the action has been handled
+        return True
+    else:
+        return False
+
 
 @time_test("Key action")
 def do_key_action(action_name, action_type):
-    def uppercase_letter():
-        return (
-            len(action_name) == 1
-            and action_name.isalpha()
-            and not action_name == action_name.upper()
-        )
-
-    # @todo detect macros here
+    # Check against aliases:
     action_name = identify(action_name)
 
-    if not action_type == "pressed":
-        # Detect and implement held keys:
-        action_name, hold = check_prefix(action_name, "hold_")
-        if hold:
-            # Handle keyboard codes
-            if action_name in dir(Keycode):
-                keycode = getattr(Keycode, action_name.upper())
-                if action_type == "pressed":
-                    Keyboard(devices).press(keycode)
-                elif action_type == "released":
-                    Keyboard(devices).release(keycode)
-        else:            
-            # Handle mouse clicks
-            if action_name in dir(Mouse):
-                keycode = getattr(Mouse, action_name.upper())
-                if action_type == "pressed":
-                    Mouse(devices).press(keycode)
-                elif action_type == "released":
-                    Mouse(devices).release(keycode)
-                    
-            # Handle any custom actions
-            else:
-                # Handle all other input types:
-                custom_action(action_name, action_type)
-    if action_type == "pressed":
-         
-        # Detect and handle string input:
-        action_name, write_this = check_prefix(action_name, "write_")
-        if write_this:
+    # @todo detect macros here
+
+    # Check for strings to write in directly and send them if found
+    # Checked first to avoid accidentally parsing strings as keycodes
+    action_name, write_this = check_prefix(action_name, "write_")
+    if write_this:
+        # Only write strings on press action, else ignore
+        if action_type == "pressed":
             KeyboardLayoutUS(Keyboard(devices)).write(action_name)
 
-        # Detect and handle uppercase letters:
-        elif uppercase_letter():
-            keycode = getattr(Keycode, action_name.upper())
-            Keyboard(devices).send(Keycode.SHIFT, keycode)
-
-        # Detect and handle plain keycodes:
-        elif hasattr(Keycode, action_name.upper()):
-            keycode = getattr(Keycode, action_name.upper())
-            Keyboard(devices).send(keycode)
-
-        # Detect and handle consumer control codes:
-        elif hasattr(ConsumerControlCode, action_name.upper()):
-            cc_code = getattr(ConsumerControlCode, action_name.upper())
-            ConsumerControl(devices).send(cc_code)
-
-        # Detect and handle standard mouse actions
-        elif hasattr(Mouse, action_name.upper()):
-            Mouse(devices).click(getattr(Mouse, action_name.upper()))
-
-        # Handle all other input types:
-        else:
-            custom_action(action_name, action_type)
+    # Check for and do HID actions if available, else pass on to custom handler
+    elif not hid_action(action_name, action_type):
+        custom_action(action_name, action_type)
 
 
 def init():
     # Just in case things have glitched out in the meantime,
-    # Release all held keys:
+    # release all held keys:
     Keyboard(devices).release_all()
+    keycodes = [
+        "ONE",
+        "TWO",
+        "THREE",
+        "FOUR",
+        "FIVE",
+        "SIX",
+        "SEVEN",
+        "EIGHT",
+        "NINE",
+        "ZERO",
+        "ENTER",
+        "RETURN",
+        "ESCAPE",
+        "BACKSPACE",
+        "TAB",
+        "SPACEBAR",
+        "SPACE",
+        "MINUS",
+        "EQUALS",
+        "LEFT_BRACKET",
+        "RIGHT_BRACKET",
+        "BACKSLASH",
+        "POUND",
+        "SEMICOLON",
+        "QUOTE",
+        "GRAVE_ACCENT",
+        "COMMA",
+        "PERIOD",
+        "FORWARD_SLASH",
+        "CAPS_LOCK",
+        "F1",
+        "F2",
+        "F3",
+        "F4",
+        "F5",
+        "F6",
+        "F7",
+        "F8",
+        "F9",
+        "F10",
+        "F11",
+        "F12",
+        "PRINT_SCREEN",
+        "SCROLL_LOCK",
+        "PAUSE",
+        "INSERT",
+        "HOME",
+        "PAGE_UP",
+        "DELETE",
+        "END",
+        "PAGE_DOWN",
+        "RIGHT_ARROW",
+        "LEFT_ARROW",
+        "DOWN_ARROW",
+        "UP_ARROW",
+        "KEYPAD_NUMLOCK",
+        "KEYPAD_FORWARD_SLASH",
+        "KEYPAD_ASTERISK",
+        "KEYPAD_MINUS",
+        "KEYPAD_PLUS",
+        "KEYPAD_ENTER",
+        "KEYPAD_ONE",
+        "KEYPAD_TWO",
+        "KEYPAD_THREE",
+        "KEYPAD_FOUR",
+        "KEYPAD_FIVE",
+        "KEYPAD_SIX",
+        "KEYPAD_SEVEN",
+        "KEYPAD_EIGHT",
+        "KEYPAD_NINE",
+        "KEYPAD_ZERO",
+        "KEYPAD_PERIOD",
+        "KEYPAD_BACKSLASH",
+        "APPLICATION",
+        "POWER",
+        "KEYPAD_EQUALS",
+        "F13",
+        "F14",
+        "F15",
+        "F16",
+        "F17",
+        "F18",
+        "F19",
+        "F20",
+        "F21",
+        "F22",
+        "F23",
+        "F24",
+        "LEFT_CONTROL",
+        "CONTROL",
+        "LEFT_SHIFT",
+        "SHIFT",
+        "LEFT_ALT",
+        "ALT",
+        "OPTION",
+        "LEFT_GUI",
+        "GUI",
+        "WINDOWS",
+        "COMMAND",
+        "RIGHT_CONTROL",
+        "RIGHT_SHIFT",
+        "RIGHT_ALT",
+        "RIGHT_GUI",
+    ]
+    # log(dir(Mouse))
 
 
 init()
