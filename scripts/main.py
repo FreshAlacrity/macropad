@@ -18,8 +18,12 @@ from layer_map import layer_action
 from layer_actions import current_layer_name
 from actions import do_key_action
 from actions import final_actions
+from actions import all_stop
 from display import update_display
 from time_test import time_test
+from sounds import sound_init
+from sounds import sound_check
+from sounds import key_sound
 from logger import log
 
 
@@ -91,6 +95,7 @@ def check_keys():
             if key_event.pressed:
                 input_action(key_num, action_type="pressed")
                 SETTINGS["keys_held"][key_num] = 0
+                key_sound(key_num)
 
             if key_event.released:
                 input_action(key_num, action_type="released")
@@ -102,7 +107,6 @@ def check_keys():
 
 @time_test("Held keys check")
 def check_held_keys():
-    TONES = [196, 220, 246, 262, 294, 330, 349, 392, 440, 494, 523, 587]
     for key_num in SETTINGS["keys_held"].keys():
         input_action(key_num, action_type="held")
         # SETTINGS["keys_held"][key_num] += 1
@@ -141,11 +145,7 @@ def init():
     do_key_action(SETTINGS["INIT_ACTION"], action_type="pressed")
     close_out()
 
-    # Play a little booted-up tune
-    # Note that this actually takes .3 seconds to execute:
-    macropad.play_tone(196, 0.1)
-    macropad.play_tone(220, 0.1)
-    macropad.play_tone(246, 0.1)
+    sound_init(macropad)
 init()
 
 
@@ -156,8 +156,11 @@ while True:
         check_keys()
         check_held_keys()
         check_rotary_encoder()
+        sound_check()
         close_out()
 
     except Exception as err:
+        all_stop()
+        sleep()
         log(f"Error: {err}, {type(err)}")
         raise

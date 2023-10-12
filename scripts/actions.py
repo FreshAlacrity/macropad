@@ -77,7 +77,6 @@ def hid_action(action_name, action_type):
     built_in = [check_dir(x) for x in directories]
 
     if any(built_in):
-        log("HERE")
         # From the HID input options, find the correct directory and controller
         controller = controllers[built_in.index(True)]
         directory = directories[built_in.index(True)]
@@ -130,10 +129,12 @@ def do_key_action(action_name, action_type):
         custom_action(action_name, action_type)
 
 
-def init():
-    # Just in case things have glitched out in the meantime,
-    # release all held keys:
+def all_stop():
+    """Release all held keys (in case of error etc.)"""
     Keyboard(devices).release_all()
+
+
+def init():    
     keycodes = [
         "ONE",
         "TWO",
