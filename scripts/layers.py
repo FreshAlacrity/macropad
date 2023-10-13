@@ -35,8 +35,11 @@ def get_layers():
             "actions": {
                 "turn_up": "vol_up",
                 "turn_down": "vol_dn",
-                "turn_click": "Layer Select"
+                "turn_click": "Layer Select",
                 # @todo add cut copy paste?
+                "left_3": "tab_left",
+                "mid_3": "tab_close",
+                "right_3": "tab_right",
             }
         },
         "Test": {
@@ -60,6 +63,32 @@ def get_layers():
                 "left": "hold_left_arrow",
                 "right": "hold_right_arrow",
                 "extra_1": "Mouse",
+                "extra_2": "Scroll",
+            }
+        },
+        "Scroll": {
+            "actions": {
+                "left_2": "l_click",
+                "right_2": "r_click",
+                "up": "scroll_up",
+                "down": "scroll_down",
+                "left": "scroll_left",
+                "right": "scroll_right",
+                "extra_1": "Arrows",
+                "extra_2": "Mouse Scroll",
+                "thumb": "MAXIMIZE",
+            }
+        },
+        "Mouse Scroll": {
+            "actions": {
+                "left_2": "l_click",
+                "right_2": "r_click",
+                "up": "mouse_scroll_up",
+                "down": "mouse_scroll_down",
+                "left": "mouse_scroll_left",
+                "right": "mouse_scroll_right",
+                "extra_1": "Mouse",
+                "extra_2": "Scroll",
             }
         },
         "Mouse": {
@@ -75,8 +104,6 @@ def get_layers():
                 "right": "mouse_right",
                 "extra_1": "Arrows",
                 # "down_2": "m_drag", # @todo get this working as a toggle
-                # "left_3": "tab_left",
-                # "right_3": "tab_right",
             }
         },
         "Game": {

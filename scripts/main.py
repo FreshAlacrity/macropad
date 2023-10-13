@@ -10,7 +10,7 @@
 # pylint: disable=broad-exception-raised, no-value-for-parameter
 
 import sys
-# from supervisor import runtime
+import supervisor
 from adafruit_macropad import MacroPad
 
 sys.path.append("scripts")
@@ -20,6 +20,7 @@ from actions import do_key_action
 from actions import final_actions
 from actions import all_stop
 from display import update_display
+from display import swap_display
 from time_test import time_test
 from sounds import sound_init
 from sounds import sound_check
@@ -28,29 +29,53 @@ from logger import log
 
 
 SETTINGS = {
-    "INIT_ACTION": "Arrows",
-    "SLEEP_AT": 100000,
-    "ROTATION": 270
+    "INIT_ACTION": "Scroll",
+    "SLEEP_AT": 1000, #00,
+    "ROTATION": 270,
+    "inherited": {}
 }
 
 # Stops reload on save:
 # Note that the serial monitor doesn't automatically reconnect after rebooting
-#runtime.autoreload = False
+#supervisor.runtime.autoreload = False
 
 # Initialize and rotate the MacroPad so that the OLED is on the left
 macropad = MacroPad(SETTINGS["ROTATION"])
-
 
 @time_test("Input action")
 def input_action(key_ref, action_type):
     
     # Retrieve the actions assigned to this key
+    # Uses inherited values where present
     # Uses default values if no actions are found
-    key_actions = layer_action(key_ref, current_layer_name())
+    # @todo see if the rotary encoder is inheriting actions correctly
+    # @todo check for and do uninherit
+    if key_ref in SETTINGS["inherited"]:
+        key_actions = SETTINGS["inherited"][key_ref]
+    else:
+        key_actions = layer_action(key_ref, current_layer_name())
     
     # Send them to be acted on
     for action in key_actions:
         do_key_action(action, action_type)
+        
+        # Check if this action can be inherited
+        # @todo Remove "hold_" if present
+        inheritable = (
+            ("left", "right"),
+            ("up", "down"),
+            ("undo", "redo")
+            )
+        for pair in inheritable:
+            for keyword in pair:
+                if keyword in action:
+                    log("Setting inheritance")
+                    ccw = action.replace(keyword, pair[0])
+                    cw = action.replace(keyword, pair[1])
+                    SETTINGS["inherited"]["turn_up"] = (cw,)
+                    SETTINGS["inherited"]["turn_down"] = (ccw,)
+                    SETTINGS["inherited"]["turn_click"] = "uninherit"
+                
 
     # Refresh the idle time counter
     unsleep()
@@ -61,23 +86,33 @@ def get_idle_time():
 
 
 def sleep():
-    # @todo Set the timer to 0
+    log("Sleeping...")
+    
+    # Clear any inherited values
+    # @todo see how this feels in practice
+    SETTINGS["inherited"] = {}
+    
     # @todo turn off the screen
+    swap_display("off")
+    
     # @todo slow down the main loop to once every tenth of a second-ish
-    pass
 
 
 def unsleep():
     SETTINGS["idle_time"] = 0
+    swap_display("main")
 
 
 @time_test("Close out")
 def close_out():
     """Wraps up any pending actions during the loop and updates the board LED display"""
-    # If input has been received during this loop:
-    if SETTINGS["idle_time"] >= SETTINGS["SLEEP_AT"]:
+    if SETTINGS["idle_time"] == SETTINGS["SLEEP_AT"]:
         sleep()
+    elif SETTINGS["idle_time"] > SETTINGS["SLEEP_AT"]:
+        # @later Delay the next cycle?
+        pass
     else:
+        # If input has been received during this loop:
         if get_idle_time() == 0:
             final_actions()
         update_display()
@@ -93,9 +128,9 @@ def check_keys():
             key_num = key_event.key_number
             
             if key_event.pressed:
+                key_sound(key_num)
                 input_action(key_num, action_type="pressed")
                 SETTINGS["keys_held"][key_num] = 0
-                key_sound(key_num)
 
             if key_event.released:
                 input_action(key_num, action_type="released")
@@ -144,8 +179,11 @@ def init():
     log("ARE WE BACK?! WE'RE BACK!")
     do_key_action(SETTINGS["INIT_ACTION"], action_type="pressed")
     close_out()
-
-    sound_init(macropad)
+    
+    # If the macropad was restarted for development reasons, play a tune
+    when = (supervisor.RunReason.AUTO_RELOAD, supervisor.RunReason.REPL_RELOAD)
+    play_tune = (supervisor.runtime.run_reason in when)
+    sound_init(macropad, play_tune)
 init()
 
 
@@ -161,6 +199,5 @@ while True:
 
     except Exception as err:
         all_stop()
-        sleep()
         log(f"Error: {err}, {type(err)}")
         raise

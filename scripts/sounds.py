@@ -17,12 +17,13 @@ def tone(num, duration=0.1):
         SETTINGS["active"] = True
 
 
-def sound_init(macropad):
+def sound_init(macropad, play_tune):
     SETTINGS["macropad"] = macropad
 
-    # Play a little boot-up tune
-    for num in range(3,6):
-        tone(num)
+    if play_tune:
+        # Play a little boot-up tune
+        for num in range(3,6):
+            tone(num)
 
 
 def key_sound(key_num):

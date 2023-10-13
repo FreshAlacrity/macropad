@@ -22,6 +22,8 @@ SETTINGS = {
     "OLED_DISPLAY": board.DISPLAY,
     "PROGRESS_BAR_HEIGHT": 45,
     "brightness": 0.5,
+    "display_groups": {},
+    "current_display_group": "main"
 }
 STORAGE = {
     "GETTER": {"LAYER": current_layer_name},
@@ -33,16 +35,22 @@ def init():
     # Display setup
     SETTINGS["OLED_DISPLAY"].auto_refresh = False
     SETTINGS["OLED_DISPLAY"].brightness = SETTINGS["brightness"]
-    SETTINGS["OLED_DISPLAY"].root_group = displayio.Group()
-    frame = SETTINGS["OLED_DISPLAY"].root_group
-
+    
     # Assign default palette colors
     palette = displayio.Palette(2)
     palette[0] = 0x000000
     palette[1] = 0xFFFFFF
     SETTINGS["PALETTE"] = palette
 
-    # Create a bitmap (sprite sheet) with two colors
+    # Create an empty display group to be the 'off' screen
+    SETTINGS["display_groups"]["off"] = displayio.Group()
+    
+    # Create a bitmap to be the main display and set it as the active group
+    frame = displayio.Group()
+    SETTINGS["display_groups"]["main"] = frame
+    SETTINGS["OLED_DISPLAY"].root_group = frame
+    
+    # Create a blank bitmap with a two color palette
     SETTINGS["MAIN_BITMAP"] = create_main_bitmap()
     
     # Set which local functions are used to
@@ -111,7 +119,6 @@ def get_group(value_type, value):
         return new_group
 
 
-
 def check_and_update(value_type):
     current_value = STORAGE["GETTER"][value_type]()
     frame = SETTINGS["OLED_DISPLAY"].root_group
@@ -126,9 +133,20 @@ def check_and_update(value_type):
         SETTINGS[value_type] = current_value
 
 
+def swap_display(display_group="off"):
+    if not display_group == SETTINGS["current_display_group"]:
+        if display_group in SETTINGS["display_groups"]:
+            new_group = SETTINGS["display_groups"][display_group]
+            SETTINGS["OLED_DISPLAY"].root_group = new_group
+            SETTINGS["current_display_group"] = display_group
+            SETTINGS["OLED_DISPLAY"].refresh()
+        else:
+            raise KeyError("No display group with that name found")
+
+    
 def update_display():
     # Save a time value to track execution time
-
+    
     # @todo check that getters and makers have the same keys
     # @todo use that list of keys here
     for e in ["LAYER", "BAR"]: # , "TAM_TAM"]:

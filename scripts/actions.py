@@ -11,13 +11,16 @@ from adafruit_hid.keyboard import Keyboard
 from adafruit_hid.keyboard_layout_us import KeyboardLayoutUS
 from adafruit_hid.consumer_control import ConsumerControl
 from adafruit_hid.mouse import Mouse
+from sounds import sound_check
 
 # alternatively: macropad.consumer_control.send
 from adafruit_hid.consumer_control_code import ConsumerControlCode
 from usb_hid import devices
 from aliases import identify
+from aliases import check_prefix
 from mouse_actions import update_mouse
-from custom_actions import custom_action
+from mouse_actions import mouse_action
+from layer_actions import layer_action
 from time_test import time_test
 from logger import log
 
@@ -26,32 +29,11 @@ from logger import log
 def final_actions():
     # Called at the end of the main loop
     update_mouse()
-
+    sound_check()
 
 def log_key_actions_list():
     # @todo
     log("Key actions:\n", ", ".join([]))
-
-
-# @todo fix this so it breaks things into actions instead
-def macro(string):
-    combos = string.split(" > ")
-    for index, segment in enumerate(combos):
-        codes = segment.split(" + ")
-        for code in codes:
-            # @todo figure out which should be press and which should be held and use the "hold_" prefix to do that
-            do_key_action(code, "pressed")
-            # @todo things here
-            if index < len(combos) - 1:
-                time.sleep(0.3)  # allow time for execution
-
-
-def check_prefix(action_name, prefix):
-    has_prefix = action_name[0 : len(prefix)] == prefix
-    if has_prefix:
-        # Trim the prefix off and re-check against aliases:
-        action_name = identify(action_name[len(prefix) :])
-    return action_name, has_prefix
 
 
 def hid_action(action_name, action_type):
@@ -64,7 +46,7 @@ def hid_action(action_name, action_type):
     is_uppercase = (
         len(action_name) == 1
         and action_name.isalpha()
-        and not action_name == action_name.upper()
+        and action_name == action_name.upper()
     )
 
     action_name, hold_action = check_prefix(action_name, "hold_")
@@ -77,13 +59,15 @@ def hid_action(action_name, action_type):
     built_in = [check_dir(x) for x in directories]
 
     if any(built_in):
+        log(f"Doing {action_name} {action_type}")
+        
         # From the HID input options, find the correct directory and controller
         controller = controllers[built_in.index(True)]
         directory = directories[built_in.index(True)]
         
-        # Treat mouse clicks etc as held actions
-        # (The mouse HID can't interpret send actions)
-        if not hold_action and directory == Mouse:
+        # Always treat mouse clicks etc as held actions
+        # (The mouse HID can't interpret "send" actions)
+        if hold_action or directory == Mouse:
             hold_action = True
 
         # Get the code from the directory to send through the HID controller
@@ -109,24 +93,74 @@ def hid_action(action_name, action_type):
         return False
 
 
+# @todo test this
+# Known issue: all single capitalized letters in macros will be made lowercase
+def macro(string, action_type):
+    def is_keycode(code): 
+        return hasattr(Keycode, identify(code).upper())
+            
+    combos = string.split(" > ")
+    for index, segment in enumerate(combos):
+        # @todo figure out how to handle _hold actions
+        codes = segment.split(" + ")
+        
+        if all([is_keycode(c) for c in codes]):
+            # If it's just keycodes, send them together immediately
+            if action_type == "pressed":
+                keycodes = [getattr(Keycode, identify(c).upper()) for c in codes]
+                Keyboard(devices).send(*keycodes)
+        elif len(combos) == 1:
+            # Treat the key as having multiple actions taken as normal
+            # Reverse order for key release so they're stacked correctly
+            if action_type == "released":
+                codes.reverse()
+            for code in codes:
+                do_key_action(code, action_type)
+                final_actions()  # Needed for mouse movement macros
+        else:
+            # Execute complete actions for this set
+            for code in codes:
+                do_key_action(code, "pressed")
+                do_key_action(code, "held")
+            codes.reverse()
+            for code in codes:
+                do_key_action(code, "released")
+            final_actions()  # Needed for mouse movement macros
+        if index < len(combos) - 1:
+            # Allow time for execution but don't play a tone the whole time
+            for _ in range(30):
+                sound_check()
+                time.sleep(0.01)
+
+
 @time_test("Key action")
 def do_key_action(action_name, action_type):
     # Check against aliases:
     action_name = identify(action_name)
 
-    # @todo detect macros here
-
-    # Check for strings to write in directly and send them if found
-    # Checked first to avoid accidentally parsing strings as keycodes
+    # @todo test macros
+    if any([x in action_name for x in "+<"]):
+        macro(action_name, action_type)
+        return
+    
+    # _write is checked first to avoid parsing strings as keycodes
     action_name, write_this = check_prefix(action_name, "write_")
+    
     if write_this:
-        # Only write strings on press action, else ignore
         if action_type == "pressed":
             KeyboardLayoutUS(Keyboard(devices)).write(action_name)
-
-    # Check for and do HID actions if available, else pass on to custom handler
-    elif not hid_action(action_name, action_type):
-        custom_action(action_name, action_type)
+    elif mouse_action(action_name, action_type):
+        # mouse_action function checks + executes
+        pass
+    elif layer_action(action_name, action_type):
+        # layer_action function checks + executes
+        pass
+    elif hid_action(action_name, action_type):
+        # hid_action function checks + executes
+        pass
+    else: 
+        # Not a recognized action at all
+        log(f"ACTION UNKNOWN: {action_name}")
 
 
 def all_stop():
@@ -134,113 +168,9 @@ def all_stop():
     Keyboard(devices).release_all()
 
 
-def init():    
-    keycodes = [
-        "ONE",
-        "TWO",
-        "THREE",
-        "FOUR",
-        "FIVE",
-        "SIX",
-        "SEVEN",
-        "EIGHT",
-        "NINE",
-        "ZERO",
-        "ENTER",
-        "RETURN",
-        "ESCAPE",
-        "BACKSPACE",
-        "TAB",
-        "SPACEBAR",
-        "SPACE",
-        "MINUS",
-        "EQUALS",
-        "LEFT_BRACKET",
-        "RIGHT_BRACKET",
-        "BACKSLASH",
-        "POUND",
-        "SEMICOLON",
-        "QUOTE",
-        "GRAVE_ACCENT",
-        "COMMA",
-        "PERIOD",
-        "FORWARD_SLASH",
-        "CAPS_LOCK",
-        "F1",
-        "F2",
-        "F3",
-        "F4",
-        "F5",
-        "F6",
-        "F7",
-        "F8",
-        "F9",
-        "F10",
-        "F11",
-        "F12",
-        "PRINT_SCREEN",
-        "SCROLL_LOCK",
-        "PAUSE",
-        "INSERT",
-        "HOME",
-        "PAGE_UP",
-        "DELETE",
-        "END",
-        "PAGE_DOWN",
-        "RIGHT_ARROW",
-        "LEFT_ARROW",
-        "DOWN_ARROW",
-        "UP_ARROW",
-        "KEYPAD_NUMLOCK",
-        "KEYPAD_FORWARD_SLASH",
-        "KEYPAD_ASTERISK",
-        "KEYPAD_MINUS",
-        "KEYPAD_PLUS",
-        "KEYPAD_ENTER",
-        "KEYPAD_ONE",
-        "KEYPAD_TWO",
-        "KEYPAD_THREE",
-        "KEYPAD_FOUR",
-        "KEYPAD_FIVE",
-        "KEYPAD_SIX",
-        "KEYPAD_SEVEN",
-        "KEYPAD_EIGHT",
-        "KEYPAD_NINE",
-        "KEYPAD_ZERO",
-        "KEYPAD_PERIOD",
-        "KEYPAD_BACKSLASH",
-        "APPLICATION",
-        "POWER",
-        "KEYPAD_EQUALS",
-        "F13",
-        "F14",
-        "F15",
-        "F16",
-        "F17",
-        "F18",
-        "F19",
-        "F20",
-        "F21",
-        "F22",
-        "F23",
-        "F24",
-        "LEFT_CONTROL",
-        "CONTROL",
-        "LEFT_SHIFT",
-        "SHIFT",
-        "LEFT_ALT",
-        "ALT",
-        "OPTION",
-        "LEFT_GUI",
-        "GUI",
-        "WINDOWS",
-        "COMMAND",
-        "RIGHT_CONTROL",
-        "RIGHT_SHIFT",
-        "RIGHT_ALT",
-        "RIGHT_GUI",
-    ]
+def init():
     # log(dir(Mouse))
+    pass
 
 
 init()
