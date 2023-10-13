@@ -63,15 +63,15 @@ def input_action(key_ref, action_type):
         # @todo Remove "hold_" if present
         inheritable = (
             ("left", "right"),
-            ("up", "down"),
+            ("down", "up"),
             ("undo", "redo")
             )
         for pair in inheritable:
             for keyword in pair:
                 if keyword in action:
                     log("Setting inheritance")
-                    ccw = action.replace(keyword, pair[0])
-                    cw = action.replace(keyword, pair[1])
+                    cw = action.replace(keyword, pair[0])
+                    ccw = action.replace(keyword, pair[1])
                     SETTINGS["inherited"]["turn_up"] = (cw,)
                     SETTINGS["inherited"]["turn_down"] = (ccw,)
                     SETTINGS["inherited"]["turn_click"] = "uninherit"
@@ -158,11 +158,11 @@ def check_rotary_encoder():
 
     # Clockwise turn detected
     if macropad.encoder > SETTINGS["encoder_position"]:
-        input_action("turn_up", "pressed")
+        input_action("turn_down", "pressed")
 
     # Counterclockwise turn detected
     elif macropad.encoder < SETTINGS["encoder_position"]:
-        input_action("turn_down", "pressed")
+        input_action("turn_up", "pressed")
 
     # Keep track of the current position to detect changes
     SETTINGS["encoder_position"] = macropad.encoder
