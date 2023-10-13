@@ -2,14 +2,18 @@
 CircuitPython for [Adafruit MacroPad RP2040](https://www.adafruit.com/product/5128)
 
 ## Design Concepts
-tamtam in the keyboard is a pet we take care of when we take care of ourselves/a nudge to be more routine about self care, so it needs breaks from taking input and to be fed and watered and get enough sleep, and it'll cheerfully turn down the lights or refuse to take input if it needs a break
+Combine standard keyboard input with predictive text and mouse movement to make a full one or two hand input device
+
+### Long Term Concept
+The tamtam in the keyboard is a pet we take care of when we take care of ourselves/a nudge to be more routine about self care, so it needs breaks from taking input and to be fed and watered and get enough sleep, and it'll cheerfully turn down the lights or refuse to take input if it needs a break
   - takes breaks only after sensible inputs (ESC, CTRL+S) when there's been ~25 minutes of activity recently
     - snooze function for wrapping up tasks
   - squeaks indignantly if you keep trying to use it during a break
 
-## References
-- to list modules: `help("modules")`
-- `dir(board)` after `import(board)` lists all the pins available
+## Resources
+- https://learn.adafruit.com/customizing-usb-devices-in-circuitpython/hid-devices
+- https://docs.circuitpython.org/en/latest/shared-bindings/supervisor/index.html
+- https://www.fesliyanstudios.com/royalty-free-sound-effects-download/keyboard-typing-6
 - https://circuitpython.org/libraries
 - https://learn.adafruit.com/ir-sensor
 - https://circuitpython.readthedocs.io/projects/bundle/en/latest/drivers.html
@@ -58,41 +62,40 @@ tamtam in the keyboard is a pet we take care of when we take care of ourselves/a
 - https://github.com/rhinterndorfer/MousePointerReposition
 
 ### Misc
-If pylance isn't recognizing imports from files, try Reload Window command
-
-## Key Action Types
-Action specific layer-maps
-
-Called on release, if False default back to above action:
-.  tap: if released quickly
-.. tap-tap: overrides regular tap behavior after a tap
--. hold-tap: overrides regular tap behavior after a hold
--  hold: if not released quickly
-.- tap-hold: overrides regular hold behavior immediately after a tap
--- hold-hold: overrides regular hold behavior immediately after a hold
-*  sticky: overrides regular behavior completely, diverts to temporary action
-
-Called on key press/while held:
-^  immediate: when pressed
-=  input: constant + immediate input while being held (for opening layers and game input)
+- if pylance isn't recognizing imports from files, try Reload Window command
+- if the serial monitor in VSCode is repeating itself, close and reopen VSCode
+- to list modules: `help("modules")`
+- `dir(board)` after `import(board)` lists all the pins available
 
 ## To Do
+- go find all the @todos
+- cut, copy, paste as macros
+- check that rotary layer select is working
+- get toggling mouse clicks working (left and middle click)
+- log the action history
+  - for mouse, if the last action was holding the same key, resume hold (otherwise immediately do the tap action)
+- rotary inherits last directional action
+  - any action on an up/down left/right or turning part of any layer
+- troubleshoot layer navigation using the rotary encoder (Layer Select layer)
+- [ ] scroll button/rotary support
 - [ ] refactor to support all key actions listed above
   - [ ] use string names for the key action types ("pressed", "released", "held", "turned")
-- add aliases for l_tab l_shift r_shift etc
-- Goal: Replace the Mouse
-  - [ ] desired behavior: if the last action was holding the same key, resume hold (otherwise immediately do the tap action)
-  - [ ] rotary inherits last directional action
-  - [ ] toggle scroll mode for mouse movement (hold middle click)
-  - [ ] actions to increase and decrease cursor speed
-  - [ ] Layer specific mouse speed support
-    - [ ] Minecraft layer for inventory view with mouse speed so a tap moves one inventory square
-- Refactoring
-  - [ ] generic hold-key actions (for arrow keys etc)
+- add aliases for l_tab l_shift r_shift etc programmatically
+- toggle scroll mode for mouse movement (hold middle click)
 - [ ] Figure out that watchdog thing that reboots it when it crashes
 - consolidate and prioritize Later todos
 
 ### Later
+- validate all action names in every layer on init/grab and file all the actions at the beginning instead of at runtime
+- read through https://learn.adafruit.com/customizing-usb-devices-in-circuitpython/hid-devices
+  - mouse pan https://github.com/adafruit/Adafruit_TinyUSB_Arduino/blob/1c5cb1d07c4d71725093cbb3b4080c5106c4a900/src/class/hid/hid_device.c#L148C26-L148C26
+  - mouse fwd and back: https://github.com/adafruit/Adafruit_TinyUSB_ArduinoCore/blob/81e146ecf41823046a3c37b7ecaa32276931bb3c/tinyusb/src/class/hid/hid.h#L259
+- read through https://docs.circuitpython.org/en/latest/shared-bindings/supervisor/index.html
+- try compiling to .mpy files (mpy-cross needs to be built on Linux)
+  - see https://forums.adafruit.com/viewtopic.php?t=166738
+- [ ] layer specific mouse speed support
+  - [ ] Minecraft layer for inventory view with mouse speed so a tap moves one inventory square
+- show the text at the top of the screen when rotated 270 degrees so it shows over the rotary encoder, but put it back on the bottom when rotated 90
 - Goal: Custom T9 Style Input
   - [ ] track inputs, combining precise and #char inputs, including previous words (for prediction and also backspace to fix)
   - [ ] inputs:
@@ -178,3 +181,20 @@ Called on key press/while held:
         - [ ] see if we can render the cute faces to the OLED
     - [ ] attach second OLED (can those be chained with other STEMMA QT boards?)
 - [ ] support for a plover mode?
+
+
+## Possible Key Action Types
+Action specific layer-maps
+
+Called on release, if False default back to above action:
+.  tap: if released quickly
+.. tap-tap: overrides regular tap behavior after a tap
+-. hold-tap: overrides regular tap behavior after a hold
+-  hold: if not released quickly
+.- tap-hold: overrides regular hold behavior immediately after a tap
+-- hold-hold: overrides regular hold behavior immediately after a hold
+*  sticky: overrides regular behavior completely, diverts to temporary action
+
+Called on key press/while held:
+^  immediate: when pressed
+=  input: constant + immediate input while being held (for opening layers and game input)

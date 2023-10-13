@@ -6,6 +6,10 @@ def identify(action_name):
         # Why does windows make a bloop noise after this?
         "DRIVE_F": "WIN + E > CTRL > CTRL > CTRL + L > write_F: > ENTER",
         "MAXIMIZE": "WIN + UP_ARROW",
+        # FILE OPERATIONS
+        "CUT": "CTRL + X",
+        "COPY": "CTRL + C",
+        "PASTE": "CTRL + V",
         # NAVIGATION
         "TAB_LEFT": "CTRL + SHIFT + TAB",
         "TAB_RIGHT": "CTRL + TAB",
